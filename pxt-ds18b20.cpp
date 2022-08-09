@@ -6,9 +6,9 @@ namespace ds18b20
 
   /* ----------------------------------------------------------------------- */
 
-  void sleep_us(int us)
+  void sleep_us(uint32_t us)
   {
-    int lasttime, nowtime;
+    uint32_t lasttime, nowtime;
     lasttime = system_timer_current_time_us();
     nowtime = system_timer_current_time_us();
     while ((nowtime - lasttime) < us)
@@ -182,9 +182,7 @@ namespace ds18b20
   {
     ds18b20Rest();          // Reset Pulses
     ds18b20Check();         // Presence Pulses
-
     sleep_us(2);
-
     ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
     ds18b20WiteByte(0x44);  // Function Commands  : Convert T [44h]
   }
@@ -207,7 +205,12 @@ namespace ds18b20
 
     ds18b20Start();
 
-    sleep_us(100);          // ! Temperature Conversion Time (tCONV)
+    /* The 1-Wire bus must be switched to the strong pullup within 10µs (max)
+    ** After a Convert T [44h] or Copy Scratchpad [48h] command is issued
+    ** And the bus must be held high by the pullup for the duration of the conversion (tCONV) or data transfer (tWR = 10ms)
+    ** No other activity can take place on the 1-Wire bus while the pullup is enabled
+    */
+    sleep_us(750000);       //! Temperature Conversion Time (tCONV)
 
     /************************/
     ds18b20Rest();          // Reset Pulses
@@ -215,15 +218,14 @@ namespace ds18b20
     sleep_us(2);
     ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
     ds18b20WiteByte(0xBE);  // Function Commands  : Read Scratchpad [BEh]
-
+    /************************/
     TL = ds18b20ReadByte();
-    sleep_us(100);          // !
     TH = ds18b20ReadByte();
     /************************/
 
     //! Use for Debug
-    uBit.serial.printf("TL %d\r\n", TL);
-    uBit.serial.printf("TH %d\r\n", TH);
+    // uBit.serial.printf("TH: %d\r\n", TH);
+    // uBit.serial.printf("TL: %d\r\n", TL);
 
     temp = (TH * 256) + TL;
 

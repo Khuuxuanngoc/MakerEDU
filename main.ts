@@ -57,9 +57,13 @@ namespace ultraSonic {
          * duration * -------- * 0.3937 ~ --------
          *               2                  147
          */
-        switch (unit) {
-            case PingUnit.Centimeters: return Math.round(duration * 0.0173065);
-            case PingUnit.Inches: return Math.round(duration * 0.0068135);
+        if (duration) {
+            switch (unit) {
+                case PingUnit.Centimeters: return Math.round(duration * 0.0173065);
+                case PingUnit.Inches: return Math.round(duration * 0.0068135);
+            }
+        } else {
+            return 0;
         }
     }
 }
@@ -206,7 +210,7 @@ namespace dht11 {
     //% inlineInputMode=inline
     //% weight=2
     export function readTemperature(sig: DigitalPin, unit: TemperatureType): number {
-        let t = -1;
+        let t = 0;
         if (read(sig)) {
             (unit == TemperatureType.Celsius) ? (t = _temperature) : (t = _temperature * 1.8 + 32);
         }
@@ -223,7 +227,7 @@ namespace dht11 {
     //% inlineInputMode=inline
     //% weight=1
     export function readHumidity(sig: DigitalPin): number {
-        let h = -1;
+        let h = 0;
         if (read(sig)) {
             h = _humidity;
         }
@@ -265,13 +269,11 @@ namespace ds18b20 {
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
     export function readTemperature(sig: DigitalPin, unit: TemperatureType): number {
-        let t = -1;
         if (unit == TemperatureType.Celsius) {
-            t = temperature(sig);
+            return temperature(sig);
         } else {
-            t = temperature(sig) * 1.8 + 32;
+            return temperature(sig) * 1.8 + 32;
         }
-        return t;
     }
 }
 
