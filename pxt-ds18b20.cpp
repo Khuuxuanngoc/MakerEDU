@@ -222,8 +222,8 @@ namespace ds18b20
     /************************/
 
     //! Use for Debug
-    uBit.serial.printf("TL %i\r\n",(int)TL);
-    uBit.serial.printf("TH %i\r\n",(int)TH);
+    uBit.serial.printf("TL %d\r\n", TL);
+    uBit.serial.printf("TH %d\r\n", TH);
 
     temp = (TH * 256) + TL;
 
