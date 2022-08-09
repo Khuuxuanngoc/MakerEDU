@@ -115,9 +115,6 @@ namespace ds18b20
     }
     sleep_us(2);
 
-    //! Use for Debug
-    uBit.serial.printf("Byte %d\r\n", data);
-
     return data;
   }
 
@@ -224,10 +221,11 @@ namespace ds18b20
     TH = ds18b20ReadByte();
     /************************/
 
-    temp = (TH * 256) + TL;
-
     //! Use for Debug
-    uBit.serial.printf("Data: %d\r\n", temp);
+    uBit.serial.printf("TL %i\r\n",(int)TL);
+    uBit.serial.printf("TH %i\r\n",(int)TH);
+
+    temp = (TH * 256) + TL;
 
     if ((temp & 0xF800) == 0xF800)  // Sign = 1 (Negative numbers)
     {
