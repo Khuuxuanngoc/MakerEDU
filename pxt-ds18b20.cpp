@@ -152,7 +152,10 @@ namespace ds18b20
         break;
     }
     if (state >= 200)
-      return false;
+      {
+        uBit.serial.printf("waits\r\n");//!!!!!!!!!!!!!!
+        return false;
+      }
     else
       state = 0;
 
@@ -164,7 +167,10 @@ namespace ds18b20
         break;
     }
     if (state >= 240)
+    {
+      uBit.serial.printf("presence\r\n");//!!!!!!!!!!!!!!
       return false;
+    }
 
     return true;                    // Initialization procedure successful!
   }
