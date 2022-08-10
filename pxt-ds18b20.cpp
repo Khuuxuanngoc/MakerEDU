@@ -222,15 +222,29 @@ namespace ds18b20
     // uBit.serial.printf("TH: %d\r\n", TH);
     // uBit.serial.printf("TL: %d\r\n", TL);
 
-    temp = (TH * 256) + TL;
-
-    if ((temp & 0xF800) == 0xF800)  // Sign = 1 (Negative numbers)
+    /*     |--- MS BYTE -----------------------|   |--- LS BYTE -----------------------|
+    ** Bit 15 - 14 - 13 - 12 - 11 - 10 - 09 - 08 - 07 - 06 - 05 - 04 - 03 - 02 - 01 - 00
+    **      S    S    S    S    S   2^+6 2^+5 2^+4 2^+3 2^+2 2^+1 2^+0 2^-1 2^-2 2^-3 2^-4
+    **
+    ** Negative Numbers S = 1
+    ** Positive Numbers S = 0
+    */
+    if ((TH & 0xF8) == 0xF8 || (TH & 0xF8) == 0x00)
     {
-      temp = (~temp) + 1;
-      return temp * -0.0625;
+      temp = (TH * 256) + TL;
+
+      if ((temp & 0xF800) == 0xF800)  // Sign = 1 (Negative numbers)
+      {
+        temp = (~temp) + 1;
+        return temp * -0.0625;
+      }
+      else                            // Sign = 0 (Positive numbers)
+        return temp * 0.0625;
     }
-    else                            // Sign = 0 (Positive numbers)
-      return temp * 0.0625;
+    else
+    {
+      return 999;
+    }
   }
 
   /* ----------------------------------------------------------------------- */
