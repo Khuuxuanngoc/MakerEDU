@@ -12,7 +12,9 @@ namespace ds18b20
     lasttime = system_timer_current_time_us();
     nowtime = system_timer_current_time_us();
     while ((nowtime - lasttime) < us)
+    {
       nowtime = system_timer_current_time_us();
+    }
   }
 
   /* ----------------------------------------------------------------------- */
@@ -129,7 +131,7 @@ namespace ds18b20
   void ds18b20Rest()
   {
     pin->setDigitalValue(0);
-    sleep_us(750);  // MASTER Tx RESET PULSE
+    sleep_us(500);  // MASTER Tx RESET PULSE
     pin->setDigitalValue(1);
     sleep_us(15);   // DS18B20 WAITS
   }
@@ -140,39 +142,26 @@ namespace ds18b20
   ** When the DS18B20 detects this rising edge, it waits 15µs to 60µs
   ** And then transmits a presence pulse by pulling the 1-Wire bus low for 60µs to 240µs
   */
-  bool ds18b20Check()
+  void ds18b20Check()
   {
     int state = 0;
-
     while (pin->getDigitalValue())  // DS18B20 WAITS (if still have)
     {
       state++;
       sleep_us(1);
-      if (state >= 100)
+      if (state >= 80)
         break;
     }
-    if (state >= 100)
-      {
-        uBit.serial.printf("waits\r\n");//!!!!!!!!!!!!!!
-        return false;
-      }
-    else
-      state = 0;
 
+    state = 0;
     while (!pin->getDigitalValue()) // DS18B20 TX PRESENCE
     {
       state++;
       sleep_us(1);
-      if (state >= 300)
+      if (state >= 260)
         break;
     }
-    if (state >= 300)
-    {
-      uBit.serial.printf("presence\r\n");//!!!!!!!!!!!!!!
-      return false;
-    }
-
-    return true;                    // Initialization procedure successful!
+    sleep_us(180);
   }
 
   /* Transaction Sequence
@@ -182,18 +171,13 @@ namespace ds18b20
   ** Step 2. ROM Command
   ** Step 3. DS18B20 Function Command
   */
-  bool ds18b20Start()
+  void ds18b20Start()
   {
-    ds18b20Rest();            // Reset Pulses
-    if (ds18b20Check())       // Presence Pulses
-    {
-      sleep_us(2);
-      ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
-      ds18b20WiteByte(0x44);  // Function Commands  : Convert T [44h]
-      return true;
-    }
-    else
-      return false;
+    ds18b20Rest();          // Reset Pulses
+    ds18b20Check();         // Presence Pulses
+    sleep_us(2);
+    ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
+    ds18b20WiteByte(0x44);  // Function Commands  : Convert T [44h]
   }
 
   /* ----------------------------------------------------------------------- */
@@ -212,8 +196,7 @@ namespace ds18b20
     uint8_t TH, TL;
     uint16_t temp;
 
-    if (!ds18b20Start())
-      return 999;           //! Error
+    ds18b20Start();
 
     /* The 1-Wire bus must be switched to the strong pullup within 10µs (max)
     ** After a Convert T [44h] or Copy Scratchpad [48h] command is issued
@@ -226,8 +209,7 @@ namespace ds18b20
 
     /************************/
     ds18b20Rest();          // Reset Pulses
-    if (!ds18b20Check())    // Presence Pulses
-      return 999;           //! Error
+    ds18b20Check();         // Presence Pulses
     sleep_us(2);
     ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
     ds18b20WiteByte(0xBE);  // Function Commands  : Read Scratchpad [BEh]

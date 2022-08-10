@@ -252,7 +252,7 @@ namespace ds18b20 {
 
     //% shim=ds18b20::temperature
     export function temperature(sig: DigitalPin): number {
-        return 0;
+        return 999;
     }
 
     /* --------------------------------------------------------------------- */
