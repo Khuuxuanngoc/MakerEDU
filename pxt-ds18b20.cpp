@@ -12,9 +12,7 @@ namespace ds18b20
     lasttime = system_timer_current_time_us();
     nowtime = system_timer_current_time_us();
     while ((nowtime - lasttime) < us)
-    {
       nowtime = system_timer_current_time_us();
-    }
   }
 
   /* ----------------------------------------------------------------------- */
@@ -131,7 +129,7 @@ namespace ds18b20
   void ds18b20Rest()
   {
     pin->setDigitalValue(0);
-    sleep_us(750);  // MASTER Tx RESET PULSE
+    sleep_us(500);  // MASTER Tx RESET PULSE
     pin->setDigitalValue(1);
     sleep_us(15);   // DS18B20 WAITS
   }
@@ -176,22 +174,27 @@ namespace ds18b20
   ** The transaction sequence for accessing the DS18B20 is as follows:
   ** Step 1. Initialization
   ** Step 2. ROM Command
-  ** Step 3. DS18B20 Function Command 
+  ** Step 3. DS18B20 Function Command
   */
-  void ds18b20Start()
+  bool ds18b20Start()
   {
-    ds18b20Rest();          // Reset Pulses
-    ds18b20Check();         // Presence Pulses
-    sleep_us(2);
-    ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
-    ds18b20WiteByte(0x44);  // Function Commands  : Convert T [44h]
+    ds18b20Rest();            // Reset Pulses
+    if (ds18b20Check())       // Presence Pulses
+    {
+      sleep_us(2);
+      ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
+      ds18b20WiteByte(0x44);  // Function Commands  : Convert T [44h]
+      return true;
+    }
+    else
+      return false;
   }
 
   /* ----------------------------------------------------------------------- */
   /*                                   MAIN                                  */
   /* ----------------------------------------------------------------------- */
 
-  /* 
+  /*
   ** The 1-Wire bus must be switched to the strong pullup
   ** Within 10µs (max) after a Convert T [44h] or Copy Scratchpad [48h] command is issued
   **
@@ -203,18 +206,22 @@ namespace ds18b20
     uint8_t TH, TL;
     uint16_t temp;
 
-    ds18b20Start();
+    if (!ds18b20Start())
+      return 999;           //! Error
 
     /* The 1-Wire bus must be switched to the strong pullup within 10µs (max)
     ** After a Convert T [44h] or Copy Scratchpad [48h] command is issued
     ** And the bus must be held high by the pullup for the duration of the conversion (tCONV) or data transfer (tWR = 10ms)
     ** No other activity can take place on the 1-Wire bus while the pullup is enabled
+    **
+    ** 12-bit resolution. tCONV max is 750ms
     */
-    sleep_us(750000);       //! Temperature Conversion Time (tCONV)
+    sleep_us(562500);       //! Temperature Conversion Time (tCONV)
 
     /************************/
     ds18b20Rest();          // Reset Pulses
-    ds18b20Check();         // Presence Pulses
+    if (!ds18b20Check())    // Presence Pulses
+      return 999;           //! Error
     sleep_us(2);
     ds18b20WiteByte(0xCC);  // ROM Commands       : Skip Rom [CCh]
     ds18b20WiteByte(0xBE);  // Function Commands  : Read Scratchpad [BEh]
@@ -247,24 +254,59 @@ namespace ds18b20
   {
     switch (p)
     {
-      case 0:   pin = &uBit.io.P0; break;
-      case 1:   pin = &uBit.io.P1; break;
-      case 2:   pin = &uBit.io.P2; break;
-      case 3:   pin = &uBit.io.P3; break;
-      case 4:   pin = &uBit.io.P4; break;
-      case 5:   pin = &uBit.io.P5; break;
-      case 6:   pin = &uBit.io.P6; break;
-      case 7:   pin = &uBit.io.P7; break;
-      case 8:   pin = &uBit.io.P8; break;
-      case 9:   pin = &uBit.io.P9; break;
-      case 10:  pin = &uBit.io.P10; break;
-      case 11:  pin = &uBit.io.P11; break;
-      case 12:  pin = &uBit.io.P12; break;
-      case 13:  pin = &uBit.io.P13; break;
-      case 14:  pin = &uBit.io.P14; break;
-      case 15:  pin = &uBit.io.P15; break;
-      case 16:  pin = &uBit.io.P16; break;
-      default:  pin = &uBit.io.P8;
+    case 0:
+      pin = &uBit.io.P0;
+      break;
+    case 1:
+      pin = &uBit.io.P1;
+      break;
+    case 2:
+      pin = &uBit.io.P2;
+      break;
+    case 3:
+      pin = &uBit.io.P3;
+      break;
+    case 4:
+      pin = &uBit.io.P4;
+      break;
+    case 5:
+      pin = &uBit.io.P5;
+      break;
+    case 6:
+      pin = &uBit.io.P6;
+      break;
+    case 7:
+      pin = &uBit.io.P7;
+      break;
+    case 8:
+      pin = &uBit.io.P8;
+      break;
+    case 9:
+      pin = &uBit.io.P9;
+      break;
+    case 10:
+      pin = &uBit.io.P10;
+      break;
+    case 11:
+      pin = &uBit.io.P11;
+      break;
+    case 12:
+      pin = &uBit.io.P12;
+      break;
+    case 13:
+      pin = &uBit.io.P13;
+      break;
+    case 14:
+      pin = &uBit.io.P14;
+      break;
+    case 15:
+      pin = &uBit.io.P15;
+      break;
+    case 16:
+      pin = &uBit.io.P16;
+      break;
+    default:
+      pin = &uBit.io.P8;
     }
     return ds18b20GetTemperture();
   }

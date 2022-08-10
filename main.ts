@@ -267,10 +267,15 @@ namespace ds18b20 {
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
     export function readTemperature(sig: DigitalPin, unit: TemperatureType): number {
-        if (unit == TemperatureType.Celsius) {
-            return temperature(sig);
+        let t = temperature(sig);
+        if (t == 999) {
+            return 0;
         } else {
-            return temperature(sig) * 1.8 + 32;
+            if (unit == TemperatureType.Celsius) {
+                return t;
+            } else {
+                return t * 1.8 + 32;
+            }
         }
     }
 }
