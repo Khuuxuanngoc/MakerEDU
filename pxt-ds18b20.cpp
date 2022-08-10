@@ -131,7 +131,8 @@ namespace ds18b20
   void ds18b20Rest()
   {
     pin->setDigitalValue(0);
-    sleep_us(500);  // MASTER Tx RESET PULSE
+    //! sleep_us(500);  // MASTER Tx RESET PULSE
+    sleep_us(750);
     pin->setDigitalValue(1);
     sleep_us(15);   // DS18B20 WAITS
   }
@@ -142,26 +143,30 @@ namespace ds18b20
   ** When the DS18B20 detects this rising edge, it waits 15µs to 60µs
   ** And then transmits a presence pulse by pulling the 1-Wire bus low for 60µs to 240µs
   */
-  void ds18b20Check()
+  int ds18b20Check()
   {
     int state = 0;
     while (pin->getDigitalValue())  // DS18B20 WAITS (if still have)
     {
       state++;
       sleep_us(1);
-      if (state >= 80)
+      if (state >= 200)//!80
         break;
     }
+    if(state>=200)return 1;//!
+    else state = 0;//!
 
     state = 0;
     while (!pin->getDigitalValue()) // DS18B20 TX PRESENCE
     {
       state++;
       sleep_us(1);
-      if (state >= 260)
+      if (state >= 240)//!260
         break;
     }
-    sleep_us(180);
+    if(state>=240)return 1;
+    return 0; 
+    //! sleep_us(180);
   }
 
   /* Transaction Sequence
@@ -205,7 +210,8 @@ namespace ds18b20
     **
     ** 12-bit resolution. tCONV max is 750ms
     */
-    sleep_us(562500);       //! Temperature Conversion Time (tCONV)
+    //! sleep_us(562500);       //! Temperature Conversion Time (tCONV)
+    sleep_us(100);
 
     /************************/
     ds18b20Rest();          // Reset Pulses
@@ -215,6 +221,7 @@ namespace ds18b20
     ds18b20WiteByte(0xBE);  // Function Commands  : Read Scratchpad [BEh]
     /************************/
     TL = ds18b20ReadByte();
+    sleep_us(100);//!
     TH = ds18b20ReadByte();
     /************************/
 
