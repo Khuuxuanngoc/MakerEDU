@@ -57,13 +57,11 @@ namespace ultraSonic {
          * duration * -------- * 0.3937 ~ --------
          *               2                  147
          */
-        if (duration === 0) {
+        if (duration == 0)
             return 0;
-        } else {
-            switch (unit) {
-                case PingUnit.Centimeters: return Math.round(duration * 0.0173065);
-                case PingUnit.Inches: return Math.round(duration * 0.0068135);
-            }
+        switch (unit) {
+            case PingUnit.Centimeters: return Math.round(duration * 0.0173065);
+            case PingUnit.Inches: return Math.round(duration * 0.0068135);
         }
     }
 }
