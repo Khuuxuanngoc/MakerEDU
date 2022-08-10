@@ -207,8 +207,7 @@ namespace ds18b20
     **
     ** 12-bit resolution. tCONV max is 750ms
     */
-    //! sleep_us(562500);       //! Temperature Conversion Time (tCONV)
-    sleep_us(100);
+    sleep_us(10000);        //! Temperature Conversion Time (tCONV)
 
     /************************/
     ds18b20Rest();          // Reset Pulses
@@ -218,7 +217,6 @@ namespace ds18b20
     ds18b20WiteByte(0xBE);  // Function Commands  : Read Scratchpad [BEh]
     /************************/
     TL = ds18b20ReadByte();
-    sleep_us(100);//!
     TH = ds18b20ReadByte();
     /************************/
 
