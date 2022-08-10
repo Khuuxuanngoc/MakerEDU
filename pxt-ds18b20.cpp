@@ -131,8 +131,7 @@ namespace ds18b20
   void ds18b20Rest()
   {
     pin->setDigitalValue(0);
-    //! sleep_us(500);  // MASTER Tx RESET PULSE
-    sleep_us(750);
+    sleep_us(750);  // MASTER Tx RESET PULSE
     pin->setDigitalValue(1);
     sleep_us(15);   // DS18B20 WAITS
   }
@@ -143,30 +142,28 @@ namespace ds18b20
   ** When the DS18B20 detects this rising edge, it waits 15µs to 60µs
   ** And then transmits a presence pulse by pulling the 1-Wire bus low for 60µs to 240µs
   */
-  int ds18b20Check()
+  bool ds18b20Check()
   {
     int state = 0;
     while (pin->getDigitalValue())  // DS18B20 WAITS (if still have)
     {
       state++;
       sleep_us(1);
-      if (state >= 200)//!80
-        break;
+      if (state >= 80)
+        return false;
     }
-    if(state>=200)return 1;//!
-    else state = 0;//!
 
     state = 0;
     while (!pin->getDigitalValue()) // DS18B20 TX PRESENCE
     {
       state++;
       sleep_us(1);
-      if (state >= 240)//!260
-        break;
+      if (state >= 260)
+        return false;
     }
-    if(state>=240)return 1;
-    return 0; 
-    //! sleep_us(180);
+
+    sleep_us(180);
+    return true; 
   }
 
   /* Transaction Sequence
