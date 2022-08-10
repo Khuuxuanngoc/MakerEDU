@@ -129,7 +129,7 @@ namespace ds18b20
   void ds18b20Rest()
   {
     pin->setDigitalValue(0);
-    sleep_us(500);  // MASTER Tx RESET PULSE
+    sleep_us(750);  // MASTER Tx RESET PULSE
     pin->setDigitalValue(1);
     sleep_us(15);   // DS18B20 WAITS
   }
@@ -148,10 +148,10 @@ namespace ds18b20
     {
       state++;
       sleep_us(1);
-      if (state >= 200)
+      if (state >= 100)
         break;
     }
-    if (state >= 200)
+    if (state >= 100)
       {
         uBit.serial.printf("waits\r\n");//!!!!!!!!!!!!!!
         return false;
@@ -163,10 +163,10 @@ namespace ds18b20
     {
       state++;
       sleep_us(1);
-      if (state >= 240)
+      if (state >= 300)
         break;
     }
-    if (state >= 240)
+    if (state >= 300)
     {
       uBit.serial.printf("presence\r\n");//!!!!!!!!!!!!!!
       return false;
