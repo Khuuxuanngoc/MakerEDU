@@ -17,17 +17,17 @@ namespace ultraSonic {
 
     /**
      * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
-     * @param trig trigger pin
-     * @param echo echo pin
      * @param unit desired conversion unit
      * @param maxCmDistance maximum distance in centimeters (default is 300)
+     * @param echo echo pin
+     * @param trig trigger pin
      */
     //% block="UltraSonic \\| Read distance $unit from EchoPin $echo and TriggerPin $trig"
     //% unit.defl=PingUnit.Centimeters
     //% echo.defl=DigitalPin.P14 echo.fieldEditor="gridpicker" echo.fieldOptions.columns=4
     //% trig.defl=DigitalPin.P15 trig.fieldEditor="gridpicker" trig.fieldOptions.columns=4
     //% inlineInputMode=inline
-    export function readDistance(trig: DigitalPin, echo: DigitalPin, unit: PingUnit, maxCmDistance = 300): number {
+    export function readDistance(unit: PingUnit, maxCmDistance = 300, echo: DigitalPin, trig: DigitalPin): number {
         /* Send pulse */
         pins.setPull(trig, PinPullMode.PullNone);
         pins.digitalWritePin(trig, 0);  // Clears the TriggerPin condition
@@ -280,73 +280,19 @@ namespace ds18b20 {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ------------------------------------------------------------------------- */
 /*                               MODULE BUZZER                               */
 /* ------------------------------------------------------------------------- */
 
 //! pxt-buzzer
 
-//% color="#FEBC68" weight=7 icon="\uf0f3" block="MKE-M03"
-namespace buzzer {
-    //% block
-    export function playNote() {
-        //
-    }
-}
+// //% color="#FEBC68" weight=7 icon="\uf0f3" block="MKE-M03"
+// namespace buzzer {
+//     //% block
+//     export function playNote() {
+//         //
+//     }
+// }
 
 /* ------------------------------------------------------------------------- */
 /*                                 MODULE LCD                                */
@@ -355,12 +301,157 @@ namespace buzzer {
 //! pxt-lcd
 
 //% color="#FEBC68" weight=6 icon="\uf26c" block="MKE-M07,08"
+//% groups="['Display', 'Clean']"
 namespace lcd {
-    //% block
-    export function displayText() {
+    /* Driver HD44780
+    ** 0x27 (39) - default
+    */
+    export enum address {
+        //% block="0x27 (39)"
+        add39 = 39,
+        //% block="0x26 (38)"
+        add38 = 38,
+        //% block="0x25 (37)"
+        add37 = 37,
+        //% block="0x24 (36)"
+        add36 = 36,
+        //% block="0x23 (35)"
+        add35 = 35,
+        //% block="0x22 (34)"
+        add34 = 34,
+        //% block="0x21 (33)"
+        add33 = 33,
+        //% block="0x20 (32)"
+        add32 = 32
+    }
+
+    /* https://mil.ufl.edu/3744/docs/lcdmanual/characterset.html */
+    export enum symbols {
+        //% block="¥"
+        sym01 = 92,
+        //% block="→"
+        sym02 = 126,
+        //% block="←"
+        sym03 = 127,
+        //% block="⌜"
+        sym04 = 162,
+        //% block="⌟"
+        sym05 = 163,
+        //% block="·"
+        sym06 = 165,
+        //% block="°"
+        sym07 = 223,
+        //% block="⎷"
+        sym08 = 232,
+        //% block="∞"
+        sym09 = 243,
+        //% block="Ω"
+        sym10 = 244,
+        //% block="Σ"
+        sym11 = 246,
+        //% block="π"
+        sym12 = 247,
+        //% block="÷"
+        sym13 = 253
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     * @param x x
+     */
+    //% block="LCD address $add \\| Print $text at Column $col and Row $row"
+    //% add.defl=address.add39 add.fieldEditor="gridpicker" add.fieldOptions.columns=2
+    //% text.defl="MakerEDU"
+    //% col.defl=1 col.min=1 col.max=20
+    //% row.defl=1 row.min=1 row.max=4
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Display"
+    export function displayText(add: address, text: string, col: number, row: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param x x
+     */
+    //% block="Special character $sym"
+    //% sym.defl=symbols.sym01 sym.fieldEditor="gridpicker" sym.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Display"
+    export function displaySymbol(sym: symbols): number {
+        return 0;
+    }
+
+    /**
+     * !
+     * @param x x
+     */
+    //% block="LCD address $add \\| Clean all"
+    //% add.defl=address.add39 add.fieldEditor="gridpicker" add.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Clean"
+    export function clearScreen(add: address) {
         //
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ------------------------------------------------------------------------- */
 /*                               MODULE DS3231                               */
