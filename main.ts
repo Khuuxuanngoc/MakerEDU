@@ -303,26 +303,27 @@ namespace ds18b20 {
 //% color="#FEBC68" weight=6 icon="\uf26c" block="MKE-M07,08"
 //% groups="['Display', 'Clean']"
 namespace lcd {
-    /* Driver HD44780
-    ** 0x27 (39) - default
-    */
+    /**
+     * Driver PCF8574
+     * 0x27 (39) - default
+     */
     export enum address {
-        //% block="0x27 (39)"
-        add39 = 39,
-        //% block="0x26 (38)"
-        add38 = 38,
-        //% block="0x25 (37)"
-        add37 = 37,
-        //% block="0x24 (36)"
-        add36 = 36,
-        //% block="0x23 (35)"
-        add35 = 35,
-        //% block="0x22 (34)"
-        add34 = 34,
+        //% block="0x20 (32)"
+        add32 = 32,
         //% block="0x21 (33)"
         add33 = 33,
-        //% block="0x20 (32)"
-        add32 = 32
+        //% block="0x22 (34)"
+        add34 = 34,
+        //% block="0x23 (35)"
+        add35 = 35,
+        //% block="0x24 (36)"
+        add36 = 36,
+        //% block="0x25 (37)"
+        add37 = 37,
+        //% block="0x26 (38)"
+        add38 = 38,
+        //% block="0x27 (39)"
+        add39 = 39
     }
 
     /* https://mil.ufl.edu/3744/docs/lcdmanual/characterset.html */
@@ -358,24 +359,142 @@ namespace lcd {
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
-     * @param x x
+     * D7 | D6 | D5 | D4 | xx | EN | RW | RS    <-> LCD
+     * P7   P6   P5   P4   P3   P2   P1   P0    <-> I2C
+     *
+     * EN : Starts Data Read/Write
+     * RW : Selects Read (1) or Write (0)
+     * RS : Selects Registers
+     *      | 0 = Instruction Register (IR), for Write "Busy Flag (BF)"
+     *      |     Address Counter (AC), for Read
+     *      | 1 = Data Register (DR), for Write and Read
+     *
+     * 0x3F (63) : PCF8574A
+     * 0x27 (39) : PCF8574
+     */
+    let _i2cAddr = 39;
+
+    /**
+     * RS | RW | D7 | D6 | D5 | D4 | D3 | D2 | D1 | D0  <-> Instructions
+     * 0    0    0    0    0    0    1    D    C    B   <-> Display on/off control
+     *                                                      D = 0; Display off
+     *                                                      C = 0; Cursor off
+     *                                                      B = 0; Blinking off
+     * BackLight    : 0x00
+     * No BackLight : 0x08
+     */
+    let _BK: number;
+
+    /**
+     * Register Select Bit
+     *
+     * RS is the LSB in protocol I2C
+     * So that means when RS = 0x00, sends a command (IR)
+     * Otherwise when RS = 0x01, sends data (DR)
+     */
+    let _RS: number;
+
+    const _initOneTime: boolean[] = [false, false, false, false, false, false, false, false];
+
+    /* --------------------------------------------------------------------- */
+
+    /* Send via I2C */
+    export function setReg(d: number) {
+        pins.i2cWriteNumber(_i2cAddr, d, NumberFormat.Int8LE);
+        basic.pause(1);
+    }
+
+    /* Send data to I2C bus */
+    export function set(d: number) {
+        d = d & 0xF0;
+        d = d + _BK + _RS;
+        setReg(d);
+        setReg(d + 0x04);
+        setReg(d);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /* Send command (IR) */
+    export function cmd(d: number) {
+        _RS = 0x00;
+        set(d);
+        set(d << 4);
+    }
+
+    /* Send data (DR) */
+    export function dat(d: number) {
+        _RS = 0x01;
+        set(d);
+        set(d << 4);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /* LCD initialization */
+    export function initLCD(addr: number) {
+        _i2cAddr = addr;
+        _BK = 0x08;
+        _RS = 0x00;
+
+        cmd(0x33);  // Set 4bit mode
+        basic.pause(5);
+
+        set(0x30);
+        basic.pause(5);
+
+        set(0x20);
+        basic.pause(5);
+
+        cmd(0x28);  // Set mode
+        cmd(0x0C);
+        cmd(0x06);
+        cmd(0x01);  // Clear
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Show a string into LCD at a given position
+     * @param addr is I2C address for LCD
+     * @param text is the string will be shown
+     * @param col is LCD column position
+     * @param row is LCD row position
      */
     //% block="LCD address $add \\| Print $text at Column $col and Row $row"
-    //% add.defl=address.add39 add.fieldEditor="gridpicker" add.fieldOptions.columns=2
+    //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% text.defl="MakerEDU"
     //% col.defl=1 col.min=1 col.max=20
     //% row.defl=1 row.min=1 row.max=4
     //% inlineInputMode=inline
     //% weight=3
     //% group="Display"
-    export function displayText(add: address, text: string, col: number, row: number) {
-        //
+    export function displayText(addr: address, text: string, col: number, row: number) {
+        /* Make sure to initialize each LCD once */
+        if (!_initOneTime[addr - 32]) {
+            initLCD(addr);
+            _initOneTime[addr - 32] = true;
+        }
+
+        _i2cAddr = addr;
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        let a: number;
+
+        if (row > 0)
+            a = 0xC0;
+        else
+            a = 0x80;
+        a += col;
+        cmd(a);
+
+        for (let i = 0; i < text.length; i++)
+            dat(text.charCodeAt(i));
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
     /**
-     * !
-     * @param x x
+     * Select special character to print on the LCD screen
+     * @param sym is special character you choose
      */
     //% block="Special character $sym"
     //% sym.defl=symbols.sym01 sym.fieldEditor="gridpicker" sym.fieldOptions.columns=2
@@ -383,20 +502,27 @@ namespace lcd {
     //% weight=2
     //% group="Display"
     export function displaySymbol(sym: symbols): number {
-        return 0;
+        return sym;
     }
 
     /**
-     * !
-     * @param x x
+     * Clear all display content
+     * @param addr is the I2C address for LCD
      */
     //% block="LCD address $add \\| Clean all"
-    //% add.defl=address.add39 add.fieldEditor="gridpicker" add.fieldOptions.columns=2
+    //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=1
     //% group="Clean"
-    export function clearScreen(add: address) {
-        //
+    export function clearScreen(addr: address) {
+        /* Make sure to initialize each LCD once */
+        if (!_initOneTime[addr - 32]) {
+            initLCD(addr);
+            _initOneTime[addr - 32] = true;
+        }
+
+        _i2cAddr = addr;
+        cmd(0x01);
     }
 }
 
