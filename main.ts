@@ -401,16 +401,24 @@ namespace lcd {
     /* Send via I2C */
     export function setReg(d: number) {
         pins.i2cWriteNumber(_i2cAddr, d, NumberFormat.Int8LE);
-        control.waitMicros(50);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
     /* Send data to I2C bus */
     export function set(d: number) {
         d = d & 0xF0;
         d = d + _BK + _RS;
-        setReg(d);
-        setReg(d + 0x04);
-        setReg(d);
+
+        setReg(d);              // expanderWrite()
+        /**
+         * pulseEnable()
+         * 
+         * EN is the 3rd bit in the I2C protocol
+         * So when EN high = 0x04, opposite EN low = 0x00
+         */
+        setReg(d + 0x04);       // EN high
+        control.waitMicros(1);  // Enable pulse must be >450ns
+        setReg(d);              // EN low
+        control.waitMicros(50); // Commands need > 37us to settle
     }
 
     /* --------------------------------------------------------------------- */
@@ -418,6 +426,7 @@ namespace lcd {
     /* Send command (IR) */
     export function cmd(d: number) {
         _RS = 0x00;
+
         set(d);
         set(d << 4);
     }
@@ -425,6 +434,7 @@ namespace lcd {
     /* Send data (DR) */
     export function dat(d: number) {
         _RS = 0x01;
+
         set(d);
         set(d << 4);
     }
@@ -437,125 +447,125 @@ namespace lcd {
         _BK = 0x08;
         _RS = 0x00;
 
-        // delay(50);
-        basic.pause(50);
+        // // delay(50);
+        // basic.pause(50);
 
-        // expanderWrite(_backlightval);
-        // _backlightval = LCD_NOBACKLIGHT;
-        // 0x00 | 0x00 = 0x00 //I2C, delay 1s
-        setReg(0x00);
-        basic.pause(1000);
+        // // expanderWrite(_backlightval);
+        // // _backlightval = LCD_NOBACKLIGHT;
+        // // 0x00 | 0x00 = 0x00 //I2C, delay 1s
+        // setReg(0x00);
+        // basic.pause(1000);
 
-        //put the LCD into 4 bit mode
-        // we start in 8bit mode, try to set 4 bit mode
-        // write4bits(0x03 << 4);  //0x30
-        // expanderWrite(0x30);
-        setReg(0x30);
-        // pulseEnable(0x30);
-        // EN = 0x04
-        // ~EN = 0xFB
-        setReg(0x34); control.waitMicros(1);
-        setReg(0x30); control.waitMicros(50);
-        // delayMicroseconds(4500); // wait min 4.1ms
-        control.waitMicros(4500);
+        // //put the LCD into 4 bit mode
+        // // we start in 8bit mode, try to set 4 bit mode
+        // // write4bits(0x03 << 4);  //0x30
+        // // expanderWrite(0x30);
+        // setReg(0x30);
+        // // pulseEnable(0x30);
+        // // EN = 0x04
+        // // ~EN = 0xFB
+        // setReg(0x34); control.waitMicros(1);
+        // setReg(0x30); control.waitMicros(50);
+        // // delayMicroseconds(4500); // wait min 4.1ms
+        // control.waitMicros(4500);
         
-        // second try
-        // write4bits(0x03 << 4);
-        // delayMicroseconds(4500); // wait min 4.1ms
-        setReg(0x30);
-        setReg(0x34); control.waitMicros(1);
-        setReg(0x30); control.waitMicros(50);
-        control.waitMicros(4500);
+        // // second try
+        // // write4bits(0x03 << 4);
+        // // delayMicroseconds(4500); // wait min 4.1ms
+        // setReg(0x30);
+        // setReg(0x34); control.waitMicros(1);
+        // setReg(0x30); control.waitMicros(50);
+        // control.waitMicros(4500);
         
-        // third go!
-        // write4bits(0x03 << 4); 
-        // delayMicroseconds(150);
-        setReg(0x30);
-        setReg(0x34); control.waitMicros(1);
-        setReg(0x30); control.waitMicros(50);
-        control.waitMicros(150);
+        // // third go!
+        // // write4bits(0x03 << 4); 
+        // // delayMicroseconds(150);
+        // setReg(0x30);
+        // setReg(0x34); control.waitMicros(1);
+        // setReg(0x30); control.waitMicros(50);
+        // control.waitMicros(150);
         
-        // finally, set to 4-bit interface
-        // write4bits(0x02 << 4); // 0x20
-        // expanderWrite(0x20);
-        setReg(0x20);
-        // pulseEnable(0x20);
-        setReg(0x24); control.waitMicros(1);
-        setReg(0x20); control.waitMicros(50);
+        // // finally, set to 4-bit interface
+        // // write4bits(0x02 << 4); // 0x20
+        // // expanderWrite(0x20);
+        // setReg(0x20);
+        // // pulseEnable(0x20);
+        // setReg(0x24); control.waitMicros(1);
+        // setReg(0x20); control.waitMicros(50);
 
-        // set # lines, font size, etc.
-        // command(LCD_FUNCTIONSET | _displayfunction);  // 0x28
-        // LCD_FUNCTIONSET = 0x20
-        // _displayfunction = 0x08
-        // send(0x28, 0); // 0x20 và 0x80
-        // write4bits(0x20);
-        setReg(0x20);
-        setReg(0x24); control.waitMicros(1);
-        setReg(0x20); control.waitMicros(50);
-        // write4bits(0x80);
-        setReg(0x80);
-        setReg(0x84); control.waitMicros(1);
-        setReg(0x80); control.waitMicros(50);
+        // // set # lines, font size, etc.
+        // // command(LCD_FUNCTIONSET | _displayfunction);  // 0x28
+        // // LCD_FUNCTIONSET = 0x20
+        // // _displayfunction = 0x08
+        // // send(0x28, 0); // 0x20 và 0x80
+        // // write4bits(0x20);
+        // setReg(0x20);
+        // setReg(0x24); control.waitMicros(1);
+        // setReg(0x20); control.waitMicros(50);
+        // // write4bits(0x80);
+        // setReg(0x80);
+        // setReg(0x84); control.waitMicros(1);
+        // setReg(0x80); control.waitMicros(50);
         
-        // turn the display on with no cursor or blinking default
-        // _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF; = 0x04
-        // display();
-        // command(0x0C);
-        // send(0x0C, 0); // 0x00 và 0xC0
-        // write4bits(0x00);
-        setReg(0x00);
-        setReg(0x04); control.waitMicros(1);
-        setReg(0x00); control.waitMicros(50);
-        // write4bits(0xC0);
-        setReg(0xC0);
-        setReg(0xC4); control.waitMicros(1);
-        setReg(0xC0); control.waitMicros(50);
+        // // turn the display on with no cursor or blinking default
+        // // _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF; = 0x04
+        // // display();
+        // // command(0x0C);
+        // // send(0x0C, 0); // 0x00 và 0xC0
+        // // write4bits(0x00);
+        // setReg(0x00);
+        // setReg(0x04); control.waitMicros(1);
+        // setReg(0x00); control.waitMicros(50);
+        // // write4bits(0xC0);
+        // setReg(0xC0);
+        // setReg(0xC4); control.waitMicros(1);
+        // setReg(0xC0); control.waitMicros(50);
         
-        // clear it off
-        // clear();
-        // command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero = 0x01
-        // send(0x01, 0); // 0x00 và 0x10
-        // write4bits(0x00);
-        setReg(0x00);
-        setReg(0x04); control.waitMicros(1);
-        setReg(0x00); control.waitMicros(50);
-        // write4bits(0x10);
-        setReg(0x10);
-        setReg(0x14); control.waitMicros(1);
-        setReg(0x10); control.waitMicros(50);
-        // delayMicroseconds(2000);  // this command takes a long time!
-        basic.pause(2);
+        // // clear it off
+        // // clear();
+        // // command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero = 0x01
+        // // send(0x01, 0); // 0x00 và 0x10
+        // // write4bits(0x00);
+        // setReg(0x00);
+        // setReg(0x04); control.waitMicros(1);
+        // setReg(0x00); control.waitMicros(50);
+        // // write4bits(0x10);
+        // setReg(0x10);
+        // setReg(0x14); control.waitMicros(1);
+        // setReg(0x10); control.waitMicros(50);
+        // // delayMicroseconds(2000);  // this command takes a long time!
+        // basic.pause(2);
         
-        // Initialize to default text direction (for roman languages)
-        // _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-        // 0x02
+        // // Initialize to default text direction (for roman languages)
+        // // _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
+        // // 0x02
         
-        // set the entry mode
-        // 0x04 | 0x02 = 0x06
-        // command(LCD_ENTRYMODESET | _displaymode);
-        // send(0x06, 0); // 0x00 và 0x60
-        // write4bits(0x00);
-        setReg(0x00);
-        setReg(0x04); control.waitMicros(1);
-        setReg(0x00); control.waitMicros(50);
-        // write4bits(0x60);
-        setReg(0x60);
-        setReg(0x64); control.waitMicros(1);
-        setReg(0x60); control.waitMicros(50);
+        // // set the entry mode
+        // // 0x04 | 0x02 = 0x06
+        // // command(LCD_ENTRYMODESET | _displaymode);
+        // // send(0x06, 0); // 0x00 và 0x60
+        // // write4bits(0x00);
+        // setReg(0x00);
+        // setReg(0x04); control.waitMicros(1);
+        // setReg(0x00); control.waitMicros(50);
+        // // write4bits(0x60);
+        // setReg(0x60);
+        // setReg(0x64); control.waitMicros(1);
+        // setReg(0x60); control.waitMicros(50);
         
-        // home();
-        // command(LCD_RETURNHOME);  // set cursor position to zero = 0x02
-        // send(0x02, 0); // 0x00 và 0x20
-        // write4bits(0x00);
-        setReg(0x00);
-        setReg(0x04); control.waitMicros(1);
-        setReg(0x00); control.waitMicros(50);
-        // write4bits(0x20);
-        setReg(0x20);
-        setReg(0x24); control.waitMicros(1);
-        setReg(0x20); control.waitMicros(50);
-        // delayMicroseconds(2000);  // this command takes a long time!
-        basic.pause(2);
+        // // home();
+        // // command(LCD_RETURNHOME);  // set cursor position to zero = 0x02
+        // // send(0x02, 0); // 0x00 và 0x20
+        // // write4bits(0x00);
+        // setReg(0x00);
+        // setReg(0x04); control.waitMicros(1);
+        // setReg(0x00); control.waitMicros(50);
+        // // write4bits(0x20);
+        // setReg(0x20);
+        // setReg(0x24); control.waitMicros(1);
+        // setReg(0x20); control.waitMicros(50);
+        // // delayMicroseconds(2000);  // this command takes a long time!
+        // basic.pause(2);
 
 
 
@@ -590,19 +600,19 @@ namespace lcd {
 
 
 
-        // cmd(0x33);  // Set 4bit mode
-        // basic.pause(5);
+        cmd(0x33);  // Set 4bit mode
+        basic.pause(5);
 
-        // set(0x30);
-        // basic.pause(5);
+        set(0x30);
+        basic.pause(5);
 
-        // set(0x20);
-        // basic.pause(5);
+        set(0x20);
+        basic.pause(5);
 
-        // cmd(0x28);  // Set mode
-        // cmd(0x0C);
-        // cmd(0x06);
-        // cmd(0x01);  // Clear
+        cmd(0x28);  // Set mode
+        cmd(0x0C);
+        cmd(0x06);
+        cmd(0x01);  // Clear
     }
 
     /* --------------------------------------------------------------------- */
