@@ -478,16 +478,24 @@ namespace lcd {
 
         _i2cAddr = addr;
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        let a: number;
+        /* Set cursor position to print */
+        let cursor: number;
+        switch (row - 1) {
+            case 0: cursor = 0x80; break;
+            case 1: cursor = 0xC0; break;
+            case 2: cursor = 0x94; break;   // 0x80 + 20
+            case 3: cursor = 0xD4;          // 0xC0 + 20
+        }
+        cursor += (col - 1);
+        cmd(cursor);
 
-        if ((row-1) > 0)
-            a = 0xC0;
+        /* Do not print overflow character */
+        let overflow: number;
+        if (text.length > 20)
+            overflow = 20;
         else
-            a = 0x80;
-        a += (col-1);
-        cmd(a);
-
-        for (let i = 0; i < text.length; i++)
+            overflow = text.length;
+        for (let i = 0; i < overflow; i++)
             dat(text.charCodeAt(i));
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
@@ -501,8 +509,8 @@ namespace lcd {
     //% inlineInputMode=inline
     //% weight=2
     //% group="Display"
-    export function displaySymbol(sym: symbols): number {
-        return sym;
+    export function displaySymbol(sym: symbols): string {
+        return String.fromCharCode(sym);
     }
 
     /**
