@@ -383,7 +383,7 @@ namespace lcd {
      * BackLight    : 0x00
      * No BackLight : 0x08
      */
-    let _BK: number;
+    let _BK = 0x00;
 
     /**
      * Register Select Bit
@@ -392,7 +392,7 @@ namespace lcd {
      * So that means when RS = 0x00, sends a command (IR)
      * Otherwise when RS = 0x01, sends data (DR)
      */
-    let _RS: number;
+    let _RS = 0x00;
 
     const _initOneTime: boolean[] = [false, false, false, false, false, false, false, false];
 
@@ -444,175 +444,57 @@ namespace lcd {
     /* LCD initialization */
     export function initLCD(addr: number) {
         _i2cAddr = addr;
-        _BK = 0x08;
+        _BK = 0x00;
         _RS = 0x00;
 
-        // // delay(50);
-        // basic.pause(50);
+        /**
+         * INITIALIZATION SPECIFICATION!
+         * 
+         * According to datasheet, we need at least 40ms after power rises above 2.7V
+         */
+        basic.pause(50);
 
-        // // expanderWrite(_backlightval);
-        // // _backlightval = LCD_NOBACKLIGHT;
-        // // 0x00 | 0x00 = 0x00 //I2C, delay 1s
-        // setReg(0x00);
-        // basic.pause(1000);
+        /**
+         * Now we pull both RS and R/W low to begin commands
+         * Reset expanderand turn backlight off
+         */
+        setReg(0x00);
+        basic.pause(1000);
 
-        // //put the LCD into 4 bit mode
-        // // we start in 8bit mode, try to set 4 bit mode
-        // // write4bits(0x03 << 4);  //0x30
-        // // expanderWrite(0x30);
-        // setReg(0x30);
-        // // pulseEnable(0x30);
-        // // EN = 0x04
-        // // ~EN = 0xFB
-        // setReg(0x34); control.waitMicros(1);
-        // setReg(0x30); control.waitMicros(50);
-        // // delayMicroseconds(4500); // wait min 4.1ms
-        // control.waitMicros(4500);
+        /**
+         * Put the LCD into 4-bit mode
+         * We start in 8-bit mode, try to set 4-bit mode
+         */
+        set(0x30);                  //
+        control.waitMicros(4500);   // Wait min 4.1ms
+        set(0x30);                  // Second try!
+        control.waitMicros(4500);   // Wait min 4.1ms
+        set(0x30);                  // Third go!
+        control.waitMicros(150);    //
+        set(0x20);                  // Finally, set to 4-bit interface
+
+        /* Set # lines, font size, etc. */
+        cmd(0x28);
         
-        // // second try
-        // // write4bits(0x03 << 4);
-        // // delayMicroseconds(4500); // wait min 4.1ms
-        // setReg(0x30);
-        // setReg(0x34); control.waitMicros(1);
-        // setReg(0x30); control.waitMicros(50);
-        // control.waitMicros(4500);
-        
-        // // third go!
-        // // write4bits(0x03 << 4); 
-        // // delayMicroseconds(150);
-        // setReg(0x30);
-        // setReg(0x34); control.waitMicros(1);
-        // setReg(0x30); control.waitMicros(50);
-        // control.waitMicros(150);
-        
-        // // finally, set to 4-bit interface
-        // // write4bits(0x02 << 4); // 0x20
-        // // expanderWrite(0x20);
-        // setReg(0x20);
-        // // pulseEnable(0x20);
-        // setReg(0x24); control.waitMicros(1);
-        // setReg(0x20); control.waitMicros(50);
-
-        // // set # lines, font size, etc.
-        // // command(LCD_FUNCTIONSET | _displayfunction);  // 0x28
-        // // LCD_FUNCTIONSET = 0x20
-        // // _displayfunction = 0x08
-        // // send(0x28, 0); // 0x20 và 0x80
-        // // write4bits(0x20);
-        // setReg(0x20);
-        // setReg(0x24); control.waitMicros(1);
-        // setReg(0x20); control.waitMicros(50);
-        // // write4bits(0x80);
-        // setReg(0x80);
-        // setReg(0x84); control.waitMicros(1);
-        // setReg(0x80); control.waitMicros(50);
-        
-        // // turn the display on with no cursor or blinking default
-        // // _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF; = 0x04
-        // // display();
-        // // command(0x0C);
-        // // send(0x0C, 0); // 0x00 và 0xC0
-        // // write4bits(0x00);
-        // setReg(0x00);
-        // setReg(0x04); control.waitMicros(1);
-        // setReg(0x00); control.waitMicros(50);
-        // // write4bits(0xC0);
-        // setReg(0xC0);
-        // setReg(0xC4); control.waitMicros(1);
-        // setReg(0xC0); control.waitMicros(50);
-        
-        // // clear it off
-        // // clear();
-        // // command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero = 0x01
-        // // send(0x01, 0); // 0x00 và 0x10
-        // // write4bits(0x00);
-        // setReg(0x00);
-        // setReg(0x04); control.waitMicros(1);
-        // setReg(0x00); control.waitMicros(50);
-        // // write4bits(0x10);
-        // setReg(0x10);
-        // setReg(0x14); control.waitMicros(1);
-        // setReg(0x10); control.waitMicros(50);
-        // // delayMicroseconds(2000);  // this command takes a long time!
-        // basic.pause(2);
-        
-        // // Initialize to default text direction (for roman languages)
-        // // _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-        // // 0x02
-        
-        // // set the entry mode
-        // // 0x04 | 0x02 = 0x06
-        // // command(LCD_ENTRYMODESET | _displaymode);
-        // // send(0x06, 0); // 0x00 và 0x60
-        // // write4bits(0x00);
-        // setReg(0x00);
-        // setReg(0x04); control.waitMicros(1);
-        // setReg(0x00); control.waitMicros(50);
-        // // write4bits(0x60);
-        // setReg(0x60);
-        // setReg(0x64); control.waitMicros(1);
-        // setReg(0x60); control.waitMicros(50);
-        
-        // // home();
-        // // command(LCD_RETURNHOME);  // set cursor position to zero = 0x02
-        // // send(0x02, 0); // 0x00 và 0x20
-        // // write4bits(0x00);
-        // setReg(0x00);
-        // setReg(0x04); control.waitMicros(1);
-        // setReg(0x00); control.waitMicros(50);
-        // // write4bits(0x20);
-        // setReg(0x20);
-        // setReg(0x24); control.waitMicros(1);
-        // setReg(0x20); control.waitMicros(50);
-        // // delayMicroseconds(2000);  // this command takes a long time!
-        // basic.pause(2);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        cmd(0x33);  // Set 4bit mode
-        basic.pause(5);
-
-        set(0x30);
-        basic.pause(5);
-
-        set(0x20);
-        basic.pause(5);
-
-        cmd(0x28);  // Set mode
+        /* Turn the display on with no cursor or blinking default */
         cmd(0x0C);
+        
+        /* Clear it off */
+        cmd(0x01);
+        basic.pause(2); // This command takes a long time!
+
+        /**
+         * Initialize to default text direction (for roman languages)
+         * Then set the entry mode
+         */
         cmd(0x06);
-        cmd(0x01);  // Clear
+        
+        /* Go home ... set cursor position to zero */
+        cmd(0x02);
+        basic.pause(2); // This command takes a long time!
+
+        _BK = 0x08;
+        _RS = 0x00;
     }
 
     /* --------------------------------------------------------------------- */
@@ -640,27 +522,40 @@ namespace lcd {
         }
 
         _i2cAddr = addr;
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         /* Set cursor position to print */
         let cursor: number;
         switch (row - 1) {
+            /**
+             * RS | RW | D7 | D6 | D5 | D4 | D3 | D2 | D1 | D0  <-> Instructions
+             * 0    0    1    ADD  ADD  ADD  ADD  ADD  ADD  ADD <-> Set DDRAM address
+             * 
+             * DDRAM address (hexadecimal):
+             * 
+             *          C00 C01 C02 C03 C04 C05 C06 C07 C08 C09 C10 C11 C12 C13 C14 C15 C16 C17 C18 C19
+             *      -------------------------------------------------------------------------------------
+             * R00  |   00  01  02  03  04  05  06  07  08  09  0A  0B  0C  0D  0E  0F  10  11  12  13  |
+             * R01  |   40  41  42  43  44  45  46  47  48  49  4A  4B  4C  4D  4E  4F  50  51  52  53  |
+             * R02  |   14  15  16  17  18  19  1A  1B  1C  1D  1E  1F  20  21  22  23  24  25  26  27  |
+             * R03  |   54  55  56  57  58  59  5A  5B  5C  5D  5E  5F  60  61  62  63  64  65  66  67  |
+             *      -------------------------------------------------------------------------------------
+             */
             case 0: cursor = 0x80; break;
-            case 1: cursor = 0xC0; break;
-            case 2: cursor = 0x94; break;   // 0x80 + 20
-            case 3: cursor = 0xD4;          // 0xC0 + 20
+            case 1: cursor = 0xC0; break;   // 0x80 + 0x40
+            case 2: cursor = 0x94; break;   // 0x80 + 0x14
+            case 3: cursor = 0xD4;          // 0xC0 + 0x14
         }
         cursor += (col - 1);
         cmd(cursor);
 
         /* Do not print overflow character */
         let overflow: number;
-        if (text.length > 20)
-            overflow = 20;
-        else
+        if (text.length <= 20 - (col - 1))
             overflow = text.length;
+        else
+            overflow = 20 - (col -1);
         for (let i = 0; i < overflow; i++)
             dat(text.charCodeAt(i));
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
     /**
@@ -693,62 +588,14 @@ namespace lcd {
         }
 
         _i2cAddr = addr;
+        /**
+         * RS | RW | D7 | D6 | D5 | D4 | D3 | D2 | D1 | D0  <-> Instructions
+         * 0    0    0    0    0    0    0    0    0    1   <-> Clear display
+         */
         cmd(0x01);
+        basic.pause(2); // This command takes a long time!
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ------------------------------------------------------------------------- */
 /*                               MODULE DS3231                               */
@@ -768,6 +615,49 @@ namespace ds3231 {
         //
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ------------------------------------------------------------------------- */
 /*                          MODULE DRIVER MOTOR I2C                          */
