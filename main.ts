@@ -308,22 +308,22 @@ namespace lcd {
      * 0x27 (39) - default
      */
     export enum address {
-        //% block="0x20 (32)"
-        add32 = 32,
-        //% block="0x21 (33)"
-        add33 = 33,
-        //% block="0x22 (34)"
-        add34 = 34,
-        //% block="0x23 (35)"
-        add35 = 35,
-        //% block="0x24 (36)"
-        add36 = 36,
-        //% block="0x25 (37)"
-        add37 = 37,
+        //% block="0x27 (39)"
+        add39 = 39,
         //% block="0x26 (38)"
         add38 = 38,
-        //% block="0x27 (39)"
-        add39 = 39
+        //% block="0x25 (37)"
+        add37 = 37,
+        //% block="0x24 (36)"
+        add36 = 36,
+        //% block="0x23 (35)"
+        add35 = 35,
+        //% block="0x22 (34)"
+        add34 = 34,
+        //% block="0x21 (33)"
+        add33 = 33,
+        //% block="0x20 (32)"
+        add32 = 32
     }
 
     /* https://mil.ufl.edu/3744/docs/lcdmanual/characterset.html */
@@ -480,11 +480,11 @@ namespace lcd {
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         let a: number;
 
-        if (row > 0)
+        if ((row-1) > 0)
             a = 0xC0;
         else
             a = 0x80;
-        a += col;
+        a += (col-1);
         cmd(a);
 
         for (let i = 0; i < text.length; i++)
