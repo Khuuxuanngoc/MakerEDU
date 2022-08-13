@@ -461,7 +461,7 @@ namespace lcd {
      * @param col is LCD column position
      * @param row is LCD row position
      */
-    //% block="LCD address $add \\| Print $text at Column $col and Row $row"
+    //% block="LCD address $addr \\| Print $text at Column $col and Row $row"
     //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% text.defl="MakerEDU"
     //% col.defl=1 col.min=1 col.max=20
@@ -509,7 +509,7 @@ namespace lcd {
      * Clear all display content
      * @param addr is the I2C address for LCD
      */
-    //% block="LCD address $add \\| Clean all"
+    //% block="LCD address $addr \\| Clean all"
     //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=1
