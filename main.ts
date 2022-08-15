@@ -307,7 +307,7 @@ namespace lcd {
      * Driver PCF8574
      * 0x27 (39) - default
      */
-    export enum address {
+    export enum Address {
         //% block="0x27 (39)"
         add39 = 39,
         //% block="0x26 (38)"
@@ -327,7 +327,7 @@ namespace lcd {
     }
 
     /* https://mil.ufl.edu/3744/docs/lcdmanual/characterset.html */
-    export enum symbols {
+    export enum Symbols {
         //% block="¥"
         sym01 = 92,
         //% block="→"
@@ -507,14 +507,14 @@ namespace lcd {
      * @param row is LCD row position
      */
     //% block="LCD address $addr \\| Print $text at Column $col and Row $row"
-    //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=Address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% text.defl="MakerEDU"
     //% col.defl=1 col.min=1 col.max=20
     //% row.defl=1 row.min=1 row.max=4
     //% inlineInputMode=inline
     //% weight=3
     //% group="Display"
-    export function displayText(addr: address, text: string, col: number, row: number) {
+    export function displayText(addr: Address, text: string, col: number, row: number) {
         /* Make sure to initialize each LCD once */
         if (!_initOneTime[addr - 32]) {
             initLCD(addr);
@@ -563,11 +563,11 @@ namespace lcd {
      * @param sym is special character you choose
      */
     //% block="Special character $sym"
-    //% sym.defl=symbols.sym01 sym.fieldEditor="gridpicker" sym.fieldOptions.columns=2
+    //% sym.defl=Symbols.sym01 sym.fieldEditor="gridpicker" sym.fieldOptions.columns=1
     //% inlineInputMode=inline
     //% weight=2
     //% group="Display"
-    export function displaySymbol(sym: symbols): string {
+    export function displaySymbol(sym: Symbols): string {
         return String.fromCharCode(sym);
     }
 
@@ -576,11 +576,11 @@ namespace lcd {
      * @param addr is the I2C address for LCD
      */
     //% block="LCD address $addr \\| Clean all"
-    //% addr.defl=address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=Address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=1
     //% group="Clean"
-    export function clearScreen(addr: address) {
+    export function clearScreen(addr: Address) {
         /* Make sure to initialize each LCD once */
         if (!_initOneTime[addr - 32]) {
             initLCD(addr);
@@ -603,16 +603,199 @@ namespace lcd {
 
 //! pxt-ds3231
 
-//% color="#FEBC68" weight=5 icon="\uf073" block="MKE-M09"
+//% color="#FEBC68" weight=5 icon="\uf017" block="MKE-M09"
+//% groups="['Get Info Time (Data)', 'Get Info Time (Text)', 'Setting Time', 'Alarm']"
 namespace ds3231 {
-    //% block
-    export function getTime(): number {
+    export enum Calendar {
+        //% block="Day"
+        Day,
+        //% block="Month"
+        Month,
+        //% block="Year"
+        Year
+    }
+
+    export enum Clock {
+        //% block="Hour"
+        Hour,
+        //% block="Minute"
+        Minute,
+        //% block="Second"
+        Second
+    }
+
+    export enum Month {
+        //% block="Jan"
+        Jan = 1,
+        //% block="Feb"
+        Feb = 2,
+        //% block="Mar"
+        Mar = 3,
+        //% block="Apr"
+        Apr = 4,
+        //% block="May"
+        May = 5,
+        //% block="Jun"
+        Jun = 6,
+        //% block="Jul"
+        Jul = 7,
+        //% block="Aug"
+        Aug = 8,
+        //% block="Sep"
+        Sep = 9,
+        //% block="Oct"
+        Oct = 10,
+        //% block="Nov"
+        Nov = 11,
+        //% block="Dec"
+        Dec = 12
+    }
+
+    export enum Alarm {
+        //% block="one time"
+        OneTime = 1,
+        //% block="always"
+        Always = 0
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    //! các biến nếu có
+
+    /* --------------------------------------------------------------------- */
+
+    //! các hàm nếu có
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     * @param calendar ?
+     */
+    //% block="DS3231 \\| Get $calendar in Calendar"
+    //% calendar.defl=Calendar.Day
+    //% inlineInputMode=inline
+    //% weight=10
+    //% group="Get Info Time (Data)"
+    export function getDayMonthYear(calendar: Calendar): number {
         return 0;
     }
 
-    //% block
-    export function setTime() {
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Get Days of the Week"
+    //% inlineInputMode=inline
+    //% weight=9
+    //% group="Get Info Time (Data)"
+    export function getDayOfWeek(): string {
+        return '0';
+    }
+
+    /**
+     * !
+     * @param clock ?
+     */
+    //% block="DS3231 \\| Get $clock in Time now"
+    //% clock.defl=Clock.Hour
+    //% inlineInputMode=inline
+    //% weight=8
+    //% group="Get Info Time (Data)"
+    export function getHourMinuteSecond(clock: Clock): number {
+        return 0;
+    }
+
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Get Calendar"
+    //% inlineInputMode=inline
+    //% weight=7
+    //% group="Get Info Time (Text)"
+    export function getCalendar(): string {
+        return '0';
+    }
+
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Get Time now"
+    //% inlineInputMode=inline
+    //% weight=6
+    //% group="Get Info Time (Text)"
+    export function getTime(): string {
+        return '0';
+    }
+
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Set Date & Time this sketch was compiled"
+    //% inlineInputMode=inline
+    //% weight=5
+    //% group="Setting Time"
+    export function setTime_byCompiled() {
         //
+    }
+
+    /**
+     * !
+     * @param day ?
+     * @param month ?
+     * @param year ?
+     * @param hour ?
+     * @param minute ?
+     */
+    //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
+    //% day.defl=1 day.min=1 day.max=31
+    //% month.defl=Month.Jan
+    //% year.defl=2022 year.min=1900 year.max=2099
+    //% hour.defl=11 hour.min=0 hour.max=23
+    //% minute.defl=30 minute.min=0 minute.max=59
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Setting Time"
+    export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param setFullTime ?
+     */
+    //% block="DS3231 \\| Setting Date & Time $setFullTime"
+    //% setFullTime.defl="ST-15/08/2022-13:13:13"
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Setting Time"
+    export function setTime_byCommands(setFullTime: string): boolean {
+        return true;
+    }
+
+    /**
+     * !
+     * @param ticks ?
+     * @param types ?
+     */
+    //% block="DS3231 \\| Setting Alarm $ticks $types"
+    //% ticks.defl="SA-15:30"
+    //% types.defl=Alarm.OneTime
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Alarm"
+    export function setAlarm(ticks: string, types: Alarm): boolean {
+        return true;
+    }
+
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Check Alarm"
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Alarm"
+    export function checkAlarm(): boolean {
+        return true;
     }
 }
 
