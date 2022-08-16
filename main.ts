@@ -670,6 +670,45 @@ namespace ds3231 {
     const DS3231_REG_MONTH = 0x05;
     const DS3231_REG_YEAR = 0x06;
 
+
+
+
+
+
+
+
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //% shim=ds3231::get_DATE
+    export function get_DATE(): string {
+        return "---";
+    }
+
+    // //% shim=ds3231::get_TIME
+    // export function get_TIME(): string {
+    //     return "---";
+    // }
+
+    //% block="DS3231 \\| Get DATE"
+    export function print_DATE(): string {
+        return get_DATE();
+    }
+
+    // //% block="DS3231 \\| Get TIME"
+    // export function print_TIME(): string {
+    //     return get_TIME();
+    // }
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
+
+
+
+
+
     /* --------------------------------------------------------------------- */
 
     /* Set a DS3231 reg */
@@ -824,28 +863,6 @@ namespace ds3231 {
     // export function setTime_byCompiled() {
     //     //
     // }
-
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // //% shim=ds3231::get_DATE
-    // export function get_DATE(): string {
-    //     return "---";
-    // }
-
-    // //% shim=ds3231::get_TIME
-    // export function get_TIME(): string {
-    //     return "---";
-    // }
-
-    // //% block="DS3231 \\| Get DATE"
-    // export function print_DATE(): string {
-    //     return get_DATE();
-    // }
-
-    // //% block="DS3231 \\| Get TIME"
-    // export function print_TIME(): string {
-    //     return get_TIME();
-    // }
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // /**
     //  * !
