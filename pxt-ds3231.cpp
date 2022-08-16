@@ -5,14 +5,14 @@
 namespace ds3231
 {
   //%
-  string get_DATE()
+  float get_DATE()
   {
-    return __DATE__;
+    return 13.31;
   }
 
-  // //%
-  // string get_TIME()
-  // {
-  //   return __TIME__;
-  // }
+  //%
+  int get_TIME()
+  {
+    return 13;
+  }
 }
