@@ -1,7 +1,5 @@
 #include "pxt.h"
 
-#include <string>
-
 namespace ds3231
 {
   //%
