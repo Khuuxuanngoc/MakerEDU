@@ -400,7 +400,7 @@ namespace lcd {
 
     /* Send via I2C */
     export function setReg(d: number) {
-        pins.i2cWriteNumber(_i2cAddr, d, NumberFormat.Int8LE);
+        pins.i2cWriteNumber(_i2cAddr, d, NumberFormat.UInt8LE);
     }
 
     /* Send data to I2C bus */
@@ -475,10 +475,10 @@ namespace lcd {
 
         /* Set # lines, font size, etc. */
         cmd(0x28);
-        
+
         /* Turn the display on with no cursor or blinking default */
         cmd(0x0C);
-        
+
         /* Clear it off */
         cmd(0x01);
         basic.pause(2); // This command takes a long time!
@@ -488,7 +488,7 @@ namespace lcd {
          * Then set the entry mode
          */
         cmd(0x06);
-        
+
         /* Go home ... set cursor position to zero */
         cmd(0x02);
         basic.pause(2); // This command takes a long time!
@@ -553,7 +553,7 @@ namespace lcd {
         if (text.length <= 20 - (col - 1))
             overflow = text.length;
         else
-            overflow = 20 - (col -1);
+            overflow = 20 - (col - 1);
         for (let i = 0; i < overflow; i++)
             dat(text.charCodeAt(i));
     }
@@ -660,11 +660,62 @@ namespace ds3231 {
 
     /* --------------------------------------------------------------------- */
 
-    //! các biến nếu có
+    const DS3231_I2C_ADDR = 0x68;
+
+    const DS3231_REG_SECOND = 0x00;
+    const DS3231_REG_MINUTE = 0x01;
+    const DS3231_REG_HOUR = 0x02;
+    const DS3231_REG_DAY = 0x03;
+    const DS3231_REG_DATE = 0x04;
+    const DS3231_REG_MONTH = 0x05;
+    const DS3231_REG_YEAR = 0x06;
 
     /* --------------------------------------------------------------------- */
 
-    //! các hàm nếu có
+    /* Set a DS3231 reg */
+    export function setReg(reg: number, dat: number) {
+        let buf = pins.createBuffer(2);
+
+        buf[0] = reg;
+        buf[1] = dat;
+
+        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
+    }
+
+    /* Get a DS3231 reg value */
+    export function regValue(reg: number): number {
+        pins.i2cWriteNumber(DS3231_I2C_ADDR, reg, NumberFormat.UInt8LE);
+
+        return pins.i2cReadNumber(DS3231_I2C_ADDR, NumberFormat.UInt8LE);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Convert a "Binary Coded Decimal" value to Binary
+     * 
+     * RTC stores time/date values as BCD
+     * 
+     * Old Recipe:  ( BCD >> 4 ) * 10 + ( BCD & 0x0F )
+     * New Recipe:  BCD - 6 * ( BCD >> 4 )
+     */
+    export function bcdToDec(bcd: number): number {
+        return bcd - 6 * (bcd >> 4);
+    }
+
+    /**
+     * Convert a Binary value to BCD format for the RTC registers
+     * 
+     * The format BCD does not store value DEC in normal format of Binary
+     * It use 4 bit corresponding for 10 digit "0-9" that is 10 number from "0-9"
+     * With 4bit MSB for "Digit x10", and 4 bit LSB for "Digit x1"
+     * 
+     * Old Recipe:  ( ( DEC / 10 ) << 4 ) + ( DEC % 10 )
+     * New Recipe:  DEC + 6 * ( DEC / 10 )
+     */
+    export function decToBcd(dec: number): number {
+        return dec + 6 * Math.idiv(dec, 10);
+    }
 
     /* --------------------------------------------------------------------- */
 
@@ -678,7 +729,11 @@ namespace ds3231 {
     //% weight=10
     //% group="Get Info Time (Data)"
     export function getDayMonthYear(calendar: Calendar): number {
-        return 0;
+        switch (calendar) {
+            case Calendar.Day: return bcdToDec(regValue(DS3231_REG_DATE));
+            case Calendar.Month: return bcdToDec(regValue(DS3231_REG_MONTH));
+            case Calendar.Year: return bcdToDec(regValue(DS3231_REG_YEAR)) + 2000;
+        }
     }
 
     /**
@@ -689,7 +744,16 @@ namespace ds3231 {
     //% weight=9
     //% group="Get Info Time (Data)"
     export function getDayOfWeek(): string {
-        return '0';
+        switch (regValue(DS3231_REG_DAY)) {
+            case 1: return "Sun";
+            case 2: return "Mon";
+            case 3: return "Tue";
+            case 4: return "Wed";
+            case 5: return "Thu";
+            case 6: return "Fri";
+            case 7: return "Sat";
+            default: return "---";
+        }
     }
 
     /**
@@ -702,7 +766,11 @@ namespace ds3231 {
     //% weight=8
     //% group="Get Info Time (Data)"
     export function getHourMinuteSecond(clock: Clock): number {
-        return 0;
+        switch (clock) {
+            case Clock.Hour: return bcdToDec(regValue(DS3231_REG_HOUR));
+            case Clock.Minute: return bcdToDec(regValue(DS3231_REG_MINUTE));
+            case Clock.Second: return bcdToDec(regValue(DS3231_REG_SECOND));
+        }
     }
 
     /**
@@ -713,7 +781,17 @@ namespace ds3231 {
     //% weight=7
     //% group="Get Info Time (Text)"
     export function getCalendar(): string {
-        return '0';
+        let d = bcdToDec(regValue(DS3231_REG_DATE));
+        let m = bcdToDec(regValue(DS3231_REG_MONTH));
+        let y = bcdToDec(regValue(DS3231_REG_YEAR)) + 2000;
+
+        let t = "";
+        t = t + getDayOfWeek() + ",";
+        (d < 10) ? (t = t + "0" + convertToText(d) + "/") : (t = t + convertToText(d) + "/");
+        (m < 10) ? (t = t + "0" + convertToText(m) + "/") : (t = t + convertToText(m) + "/");
+        t += y;
+
+        return t;
     }
 
     /**
@@ -724,79 +802,110 @@ namespace ds3231 {
     //% weight=6
     //% group="Get Info Time (Text)"
     export function getTime(): string {
-        return '0';
+        let h = bcdToDec(regValue(DS3231_REG_HOUR));
+        let m = bcdToDec(regValue(DS3231_REG_MINUTE));
+        let s = bcdToDec(regValue(DS3231_REG_SECOND));
+
+        let t = "";
+        (h < 10) ? (t = t + "0" + convertToText(h) + ":") : (t = t + convertToText(h) + ":");
+        (m < 10) ? (t = t + "0" + convertToText(m) + ":") : (t = t + convertToText(m) + ":");
+        (s < 10) ? (t = t + "0" + convertToText(s)) : (t = t + convertToText(s));
+        
+        return t;
     }
 
-    /**
-     * !
-     */
-    //% block="DS3231 \\| Set Date & Time this sketch was compiled"
-    //% inlineInputMode=inline
-    //% weight=5
-    //% group="Setting Time"
-    export function setTime_byCompiled() {
-        //
+    // /**
+    //  * !
+    //  */
+    // //% block="DS3231 \\| Set Date & Time this sketch was compiled"
+    // //% inlineInputMode=inline
+    // //% weight=5
+    // //% group="Setting Time"
+    // export function setTime_byCompiled() {
+    //     //
+    // }
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //% shim=ds3231::get_DATE
+    export function get_DATE(): string {
+        return "---";
     }
 
-    /**
-     * !
-     * @param day ?
-     * @param month ?
-     * @param year ?
-     * @param hour ?
-     * @param minute ?
-     */
-    //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
-    //% day.defl=1 day.min=1 day.max=31
-    //% month.defl=Month.Jan
-    //% year.defl=2022 year.min=1900 year.max=2099
-    //% hour.defl=11 hour.min=0 hour.max=23
-    //% minute.defl=30 minute.min=0 minute.max=59
-    //% inlineInputMode=inline
-    //% weight=4
-    //% group="Setting Time"
-    export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
-        //
+    //% shim=ds3231::get_TIME
+    export function get_TIME(): string {
+        return "---";
     }
 
-    /**
-     * !
-     * @param setFullTime ?
-     */
-    //% block="DS3231 \\| Setting Date & Time $setFullTime"
-    //% setFullTime.defl="ST-15/08/2022-13:13:13"
-    //% inlineInputMode=inline
-    //% weight=3
-    //% group="Setting Time"
-    export function setTime_byCommands(setFullTime: string): boolean {
-        return true;
+    //% block="DS3231 \\| Get DATE"
+    export function print_DATE(): string {
+        return get_DATE();
     }
 
-    /**
-     * !
-     * @param ticks ?
-     * @param types ?
-     */
-    //% block="DS3231 \\| Setting Alarm $ticks $types"
-    //% ticks.defl="SA-15:30"
-    //% types.defl=Alarm.OneTime
-    //% inlineInputMode=inline
-    //% weight=2
-    //% group="Alarm"
-    export function setAlarm(ticks: string, types: Alarm): boolean {
-        return true;
+    //% block="DS3231 \\| Get TIME"
+    export function print_TIME(): string {
+        return get_TIME();
     }
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    /**
-     * !
-     */
-    //% block="DS3231 \\| Check Alarm"
-    //% inlineInputMode=inline
-    //% weight=1
-    //% group="Alarm"
-    export function checkAlarm(): boolean {
-        return true;
-    }
+    // /**
+    //  * !
+    //  * @param day ?
+    //  * @param month ?
+    //  * @param year ?
+    //  * @param hour ?
+    //  * @param minute ?
+    //  */
+    // //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
+    // //% day.defl=1 day.min=1 day.max=31
+    // //% month.defl=Month.Jan
+    // //% year.defl=2022 year.min=2000 year.max=2099
+    // //% hour.defl=11 hour.min=0 hour.max=23
+    // //% minute.defl=30 minute.min=0 minute.max=59
+    // //% inlineInputMode=inline
+    // //% weight=4
+    // //% group="Setting Time"
+    // export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
+    //     //
+    // }
+
+    // /**
+    //  * !
+    //  * @param setFullTime ?
+    //  */
+    // //% block="DS3231 \\| Setting Date & Time $setFullTime"
+    // //% setFullTime.defl="ST-15/08/2022-13:13:13"
+    // //% inlineInputMode=inline
+    // //% weight=3
+    // //% group="Setting Time"
+    // export function setTime_byCommands(setFullTime: string): boolean {
+    //     return true;
+    // }
+
+    // /**
+    //  * !
+    //  * @param ticks ?
+    //  * @param types ?
+    //  */
+    // //% block="DS3231 \\| Setting Alarm $ticks $types"
+    // //% ticks.defl="SA-15:30"
+    // //% types.defl=Alarm.OneTime
+    // //% inlineInputMode=inline
+    // //% weight=2
+    // //% group="Alarm"
+    // export function setAlarm(ticks: string, types: Alarm): boolean {
+    //     return true;
+    // }
+
+    // /**
+    //  * !
+    //  */
+    // //% block="DS3231 \\| Check Alarm"
+    // //% inlineInputMode=inline
+    // //% weight=1
+    // //% group="Alarm"
+    // export function checkAlarm(): boolean {
+    //     return true;
+    // }
 }
 
 
