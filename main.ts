@@ -658,6 +658,29 @@ namespace ds3231 {
         Always = 0
     }
 
+    /**
+     * Note: the value "Day of the Week" store in DS3231
+     * Have value from [1 - 7], with value 1 mean Sunday, 2 is Monday, and so on ...
+     * 
+     *      ENUM - DS3231  - ISO_8601 (the Week begin Monday, not Sunday)
+     * Sun  0    - 1       - 7
+     * Mon  1    - 2       - 1
+     * Tue  2    - 3       - 2
+     * Wed  3    - 4       - 3
+     * Thu  4    - 5       - 4
+     * Fri  5    - 6       - 5
+     * Sat  6    - 7       - 6
+     */
+    export enum DayOfWeek {
+        Sun,
+        Mon,
+        Tue,
+        Wed,
+        Thu,
+        Fri,
+        Sat
+    }
+
     /* --------------------------------------------------------------------- */
 
     const DS3231_I2C_ADDR = 0x68;
@@ -669,45 +692,6 @@ namespace ds3231 {
     const DS3231_REG_DATE = 0x04;
     const DS3231_REG_MONTH = 0x05;
     const DS3231_REG_YEAR = 0x06;
-
-
-
-
-
-
-
-
-
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //% shim=ds3231::get_DATE
-    export function get_DATE(): string {
-        return "---";
-    }
-
-    //% shim=ds3231::get_TIME
-    export function get_TIME(): string {
-        return "---";
-    }
-
-    //% block="DS3231 \\| Get DATE"
-    export function print_DATE(): string {
-        return get_DATE();
-    }
-
-    //% block="DS3231 \\| Get TIME"
-    export function print_TIME(): string {
-        return get_TIME();
-    }
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-
-
-
-
-
-
 
     /* --------------------------------------------------------------------- */
 
@@ -755,6 +739,59 @@ namespace ds3231 {
     export function decToBcd(dec: number): number {
         return dec + 6 * Math.idiv(dec, 10);
     }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * To determine this "Date" of Month of Year is what "Day of the Week"?
+     * The Week begin Sunday with number 0
+     * 
+     * Way Tomohiko Sakamoto’s used the "Doomsday Algorithm" to determine the Day of the Week!
+     */
+    export function getDayOfWeek(y: number, m: number, d: number): number {
+        const monthTable: number[] = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+
+        y -= ((m < 3) ? 1 : 0);
+
+        return ((y + y / 4 - y / 100 + y / 400 + monthTable[m - 1] + d) % 7);
+    }
+
+    /**
+     * Mapping the value "Day" from "Tomohiko Sakamoto" to "ISO_8601"
+     */
+    export function getDS3231DayOfWeek(y: number, m: number, d: number): number {
+        switch (getDayOfWeek(y, m, d)) {
+            case DayOfWeek.Sun: return 1;
+            case DayOfWeek.Mon: return 2;
+            case DayOfWeek.Tue: return 3;
+            case DayOfWeek.Wed: return 4;
+            case DayOfWeek.Thu: return 5;
+            case DayOfWeek.Fri: return 6;
+            case DayOfWeek.Sat: return 7;
+        }
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    //% shim=ds3231::get_DATE
+    export function get_DATE(): string {
+        return "?";
+    }
+
+    //% shim=ds3231::get_TIME
+    export function get_TIME(): string {
+        return "?";
+    }
+
+    // //% block="DS3231 \\| Print DATE"
+    // export function print_DATE(): string {
+    //     return get_DATE();
+    // }
+
+    // //% block="DS3231 \\| Print TIME"
+    // export function print_TIME(): string {
+    //     return get_TIME();
+    // }
 
     /* --------------------------------------------------------------------- */
 
@@ -849,7 +886,7 @@ namespace ds3231 {
         (h < 10) ? (t = t + "0" + convertToText(h) + ":") : (t = t + convertToText(h) + ":");
         (m < 10) ? (t = t + "0" + convertToText(m) + ":") : (t = t + convertToText(m) + ":");
         (s < 10) ? (t = t + "0" + convertToText(s)) : (t = t + convertToText(s));
-        
+
         return t;
     }
 
@@ -864,26 +901,37 @@ namespace ds3231 {
     //     //
     // }
 
-    // /**
-    //  * !
-    //  * @param day ?
-    //  * @param month ?
-    //  * @param year ?
-    //  * @param hour ?
-    //  * @param minute ?
-    //  */
-    // //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
-    // //% day.defl=1 day.min=1 day.max=31
-    // //% month.defl=Month.Jan
-    // //% year.defl=2022 year.min=2000 year.max=2099
-    // //% hour.defl=11 hour.min=0 hour.max=23
-    // //% minute.defl=30 minute.min=0 minute.max=59
-    // //% inlineInputMode=inline
-    // //% weight=4
-    // //% group="Setting Time"
-    // export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
-    //     //
-    // }
+    /**
+     * !
+     * @param day ?
+     * @param month ?
+     * @param year ?
+     * @param hour ?
+     * @param minute ?
+     */
+    //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
+    //% day.defl=1 day.min=1 day.max=31
+    //% month.defl=Month.Jan
+    //% year.defl=2022 year.min=2000 year.max=2099
+    //% hour.defl=11 hour.min=0 hour.max=23
+    //% minute.defl=30 minute.min=0 minute.max=59
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Setting Time"
+    export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
+        let buf = pins.createBuffer(8);
+
+        buf[0] = DS3231_REG_SECOND;
+        buf[1] = decToBcd(0);
+        buf[2] = decToBcd(minute);
+        buf[3] = decToBcd(hour);
+        buf[4] = decToBcd(getDS3231DayOfWeek(year, month, day));
+        buf[5] = decToBcd(day);
+        buf[6] = decToBcd(month);
+        buf[7] = decToBcd(year - 2000);
+
+        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf)
+    }
 
     // /**
     //  * !
