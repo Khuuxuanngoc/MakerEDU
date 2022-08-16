@@ -9,7 +9,7 @@
     "files": [
         "main.ts",
         "README.md",
-        "pxt-ds18b20.cpp"
+        "pxt-ds18b20.cpp",
         "pxt-ds3231.cpp" //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ],
     "testFiles": [
