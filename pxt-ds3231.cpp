@@ -3,14 +3,14 @@
 namespace ds3231
 {
   //%
-  float get_DATE()
+  String get_DATE()
   {
-    return 13.31;
+    return "DATE";
   }
 
   //%
-  int get_TIME()
+  String get_TIME()
   {
-    return 13;
+    return "TIME";
   }
 }

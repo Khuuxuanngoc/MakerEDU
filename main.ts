@@ -680,22 +680,22 @@ namespace ds3231 {
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //% shim=ds3231::get_DATE
-    export function get_DATE(): number {
-        return 0;
+    export function get_DATE(): string {
+        return "---";
     }
 
     //% shim=ds3231::get_TIME
-    export function get_TIME(): number {
-        return 0;
+    export function get_TIME(): string {
+        return "---";
     }
 
     //% block="DS3231 \\| Get DATE"
-    export function print_DATE(): number {
+    export function print_DATE(): string {
         return get_DATE();
     }
 
     //% block="DS3231 \\| Get TIME"
-    export function print_TIME(): number {
+    export function print_TIME(): string {
         return get_TIME();
     }
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
