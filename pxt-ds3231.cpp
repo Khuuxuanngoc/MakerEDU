@@ -5,12 +5,12 @@ namespace ds3231
   //%
   String get_DATE()
   {
-    return "DATE";
+    return PSTR("DATE");
   }
 
   //%
   String get_TIME()
   {
-    return "TIME";
+    return PSTR("TIME");
   }
 }
