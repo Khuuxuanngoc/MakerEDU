@@ -747,7 +747,7 @@ namespace ds3231 {
 
         y -= ((m < 3) ? 1 : 0);
 
-        return ((y + y / 4 - y / 100 + y / 400 + monthTable[m - 1] + d) % 7);
+        return ((y + Math.idiv(y, 4) - Math.idiv(y, 100) + Math.idiv(y, 400) + monthTable[m - 1] + d) % 7);
     }
 
     /**
@@ -762,6 +762,7 @@ namespace ds3231 {
             case DayOfWeek.Thu: return 5;
             case DayOfWeek.Fri: return 6;
             case DayOfWeek.Sat: return 7;
+            default: return 0;
         }
     }
 
@@ -856,7 +857,7 @@ namespace ds3231 {
         let y = bcdToDec(regValue(DS3231_REG_YEAR)) + 2000;
 
         let t = "";
-        t = t + getDayOfWeek() + ",";
+        t = t + getDate() + ",";
         (d < 10) ? (t = t + "0" + convertToText(d) + "/") : (t = t + convertToText(d) + "/");
         (m < 10) ? (t = t + "0" + convertToText(m) + "/") : (t = t + convertToText(m) + "/");
         t += y;
