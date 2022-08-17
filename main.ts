@@ -813,7 +813,7 @@ namespace ds3231 {
     //% inlineInputMode=inline
     //% weight=10
     //% group="Get Info Time (Data)"
-    export function getDayOfWeek(): string {
+    export function getDate(): string {
         switch (regValue(DS3231_REG_DAY)) {
             case 1: return "Sun";
             case 2: return "Mon";
