@@ -672,13 +672,7 @@ namespace ds3231 {
      * Sat  6    - 7       - 6
      */
     export enum DayOfWeek {
-        Sun,
-        Mon,
-        Tue,
-        Wed,
-        Thu,
-        Fri,
-        Sat
+        Sun, Mon, Tue, Wed, Thu, Fri, Sat
     }
 
     /* --------------------------------------------------------------------- */
@@ -802,7 +796,7 @@ namespace ds3231 {
     //% block="DS3231 \\| Get $calendar in Calendar"
     //% calendar.defl=Calendar.Day
     //% inlineInputMode=inline
-    //% weight=10
+    //% weight=11
     //% group="Get Info Time (Data)"
     export function getDayMonthYear(calendar: Calendar): number {
         switch (calendar) {
@@ -817,7 +811,7 @@ namespace ds3231 {
      */
     //% block="DS3231 \\| Get Days of the Week"
     //% inlineInputMode=inline
-    //% weight=9
+    //% weight=10
     //% group="Get Info Time (Data)"
     export function getDayOfWeek(): string {
         switch (regValue(DS3231_REG_DAY)) {
@@ -839,7 +833,7 @@ namespace ds3231 {
     //% block="DS3231 \\| Get $clock in Time now"
     //% clock.defl=Clock.Hour
     //% inlineInputMode=inline
-    //% weight=8
+    //% weight=9
     //% group="Get Info Time (Data)"
     export function getHourMinuteSecond(clock: Clock): number {
         switch (clock) {
@@ -854,7 +848,7 @@ namespace ds3231 {
      */
     //% block="DS3231 \\| Get Calendar"
     //% inlineInputMode=inline
-    //% weight=7
+    //% weight=8
     //% group="Get Info Time (Text)"
     export function getCalendar(): string {
         let d = bcdToDec(regValue(DS3231_REG_DATE));
@@ -875,7 +869,7 @@ namespace ds3231 {
      */
     //% block="DS3231 \\| Get Time now"
     //% inlineInputMode=inline
-    //% weight=6
+    //% weight=7
     //% group="Get Info Time (Text)"
     export function getTime(): string {
         let h = bcdToDec(regValue(DS3231_REG_HOUR));
@@ -890,16 +884,54 @@ namespace ds3231 {
         return t;
     }
 
-    // /**
-    //  * !
-    //  */
-    // //% block="DS3231 \\| Set Date & Time this sketch was compiled"
-    // //% inlineInputMode=inline
-    // //% weight=5
-    // //% group="Setting Time"
-    // export function setTime_byCompiled() {
-    //     //
-    // }
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Set Date & Time this sketch was compiled"
+    //% inlineInputMode=inline
+    //% weight=6
+    //% group="Setting Time"
+    export function setTime_byCompiled() {
+        let s = "";
+
+        s = get_DATE(); // mmm dd yyyy
+        let DATE = s.split(" ");
+        s = get_TIME(); // hh:mm:ss
+        let TIME = s.split(":");
+
+        let y = parseInt(DATE[2]);
+        let m: number;
+        switch (DATE[0]) {
+            case "Jan": m = 1;
+            case "Feb": m = 2;
+            case "Mar": m = 3;
+            case "Apr": m = 4;
+            case "May": m = 5;
+            case "Jun": m = 6;
+            case "Jul": m = 7;
+            case "Aug": m = 8;
+            case "Sep": m = 9;
+            case "Oct": m = 10;
+            case "Nov": m = 11;
+            case "Dec": m = 12;
+        }
+        let d = parseInt(DATE[1]);
+
+        /* ----------------------------------------------------------------- */
+
+        let buf = pins.createBuffer(8);
+
+        buf[0] = DS3231_REG_SECOND;
+        buf[1] = decToBcd(parseInt(TIME[2]));
+        buf[2] = decToBcd(parseInt(TIME[1]));
+        buf[3] = decToBcd(parseInt(TIME[0]));
+        buf[4] = decToBcd(getDS3231DayOfWeek(y, m, d));
+        buf[5] = decToBcd(d);
+        buf[6] = decToBcd(m);
+        buf[7] = decToBcd(y - 2000);
+
+        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
+    }
 
     /**
      * !
@@ -916,7 +948,7 @@ namespace ds3231 {
     //% hour.defl=11 hour.min=0 hour.max=23
     //% minute.defl=30 minute.min=0 minute.max=59
     //% inlineInputMode=inline
-    //% weight=4
+    //% weight=5
     //% group="Setting Time"
     export function setTime_byChoose(day: number, month: Month, year: number, hour: number, minute: number) {
         let buf = pins.createBuffer(8);
@@ -930,7 +962,7 @@ namespace ds3231 {
         buf[6] = decToBcd(month);
         buf[7] = decToBcd(year - 2000);
 
-        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf)
+        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
     }
 
     // /**
@@ -940,10 +972,22 @@ namespace ds3231 {
     // //% block="DS3231 \\| Setting Date & Time $setFullTime"
     // //% setFullTime.defl="ST-15/08/2022-13:13:13"
     // //% inlineInputMode=inline
-    // //% weight=3
+    // //% weight=4
     // //% group="Setting Time"
     // export function setTime_byCommands(setFullTime: string): boolean {
     //     return true;
+    // }
+
+    // /**
+    //  * !
+    //  * @param x ?
+    //  */
+    // //% block="DS3231 \\| ?"
+    // //% inlineInputMode=inline
+    // //% weight=3
+    // //% group="Alarm"
+    // export function setAlarm_byChoose() {
+    //     //
     // }
 
     // /**
@@ -957,7 +1001,7 @@ namespace ds3231 {
     // //% inlineInputMode=inline
     // //% weight=2
     // //% group="Alarm"
-    // export function setAlarm(ticks: string, types: Alarm): boolean {
+    // export function setAlarm_byCommands(ticks: string, types: Alarm): boolean {
     //     return true;
     // }
 
