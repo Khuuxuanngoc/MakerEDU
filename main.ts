@@ -778,15 +778,17 @@ namespace ds3231 {
         return "?";
     }
 
-    // //% block="DS3231 \\| Print DATE"
-    // export function print_DATE(): string {
-    //     return get_DATE();
-    // }
+    //! Use for Debug
+    //% block="DS3231 \\| Print DATE"
+    export function print_DATE(): string {
+        return get_DATE();
+    }
 
-    // //% block="DS3231 \\| Print TIME"
-    // export function print_TIME(): string {
-    //     return get_TIME();
-    // }
+    //! Use for Debug
+    //% block="DS3231 \\| Print TIME"
+    export function print_TIME(): string {
+        return get_TIME();
+    }
 
     /* --------------------------------------------------------------------- */
 
