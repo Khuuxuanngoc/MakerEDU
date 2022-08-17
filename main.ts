@@ -900,6 +900,10 @@ namespace ds3231 {
         s = get_TIME(); // hh:mm:ss
         let TIME = s.split(":");
 
+        //! Use for Debug
+        serial.writeLine(DATE[1] + " - " + DATE[0] + " - " + DATE[2]);
+        serial.writeLine(TIME[0] + " : " + TIME[1] + " : " + TIME[2]);
+
         let y = parseInt(DATE[2]);
         let m: number;
         switch (DATE[0]) {
