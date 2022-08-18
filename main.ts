@@ -675,6 +675,9 @@ namespace ds3231 {
         Sun, Mon, Tue, Wed, Thu, Fri, Sat
     }
 
+    const alarm: number[] = [-1, -1];   // [Hour:Minute]
+    let typeAlarm = Alarm.OneTime;      // Alarm one time!
+
     /* --------------------------------------------------------------------- */
 
     const DS3231_I2C_ADDR = 0x68;
@@ -887,46 +890,40 @@ namespace ds3231 {
         return t;
     }
 
-    /**
-     * !
-     */
-    //% block="DS3231 \\| Set Date & Time this sketch was compiled"
-    //% inlineInputMode=inline
-    //% weight=6
-    //% group="Setting Time"
-    export function setTime_byCompiled() {
-        // let s = "";
-        // s = get_DATE(); // mmm dd yyyy
-        // let DATE = s.split(" ");
-        // s = get_TIME(); // hh:mm:ss
-        // let TIME = s.split(":");
+    // /**
+    //  * !
+    //  */
+    // //% block="DS3231 \\| Set Date & Time this sketch was compiled"
+    // //% inlineInputMode=inline
+    // //% weight=6
+    // //% group="Setting Time"
+    // export function setTime_byCompiled() {
+    //     let s = "";
 
-        //! Use for Debug
-        // serial.writeLine(DATE[1] + "-" + DATE[0] + "-" + DATE[2]);
-        // serial.writeLine(TIME[0] + ":" + TIME[1] + ":" + TIME[2]);
+    //     s = get_DATE(); // mmm dd yyyy
+    //     let DATE = s.split(" ");
+    //     s = get_TIME(); // hh:mm:ss
+    //     let TIME = s.split(":");
 
-        /* ----------------------------------------------------------------- */
+    //     //! Use for Debug
+    //     // serial.writeLine(DATE[1] + "-" + DATE[0] + "-" + DATE[2]);
+    //     // serial.writeLine(TIME[0] + ":" + TIME[1] + ":" + TIME[2]);
 
-        let dateTime = new Date();
+    //     /* ----------------------------------------------------------------- */
 
-        //! Use for Debug
-        serial.writeLine(dateTime);
+    //     let buf = pins.createBuffer(8);
 
-        /* ----------------------------------------------------------------- */
+    //     buf[0] = DS3231_REG_SECOND;
+    //     buf[1] = decToBcd(parseInt(TIME[2]));
+    //     buf[2] = decToBcd(parseInt(TIME[1]));
+    //     buf[3] = decToBcd(parseInt(TIME[0]));
+    //     buf[4] = decToBcd(getDS3231DayOfWeek(y, m, d));
+    //     buf[5] = decToBcd(d);
+    //     buf[6] = decToBcd(m);
+    //     buf[7] = decToBcd(y - 2000);
 
-        // let buf = pins.createBuffer(8);
-
-        // buf[0] = DS3231_REG_SECOND;
-        // buf[1] = decToBcd(parseInt(TIME[2]));
-        // buf[2] = decToBcd(parseInt(TIME[1]));
-        // buf[3] = decToBcd(parseInt(TIME[0]));
-        // buf[4] = decToBcd(getDS3231DayOfWeek(y, m, d));
-        // buf[5] = decToBcd(d);
-        // buf[6] = decToBcd(m);
-        // buf[7] = decToBcd(y - 2000);
-
-        // pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
-    }
+    //     pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
+    // }
 
     /**
      * !
@@ -960,56 +957,140 @@ namespace ds3231 {
         pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
     }
 
-    // /**
-    //  * !
-    //  * @param setFullTime ?
-    //  */
-    // //% block="DS3231 \\| Setting Date & Time $setFullTime"
-    // //% setFullTime.defl="ST-15/08/2022-13:13:13"
-    // //% inlineInputMode=inline
-    // //% weight=4
-    // //% group="Setting Time"
-    // export function setTime_byCommands(setFullTime: string): boolean {
-    //     return true;
-    // }
+    /**
+     * !
+     * @param setFullTime ?
+     */
+    //% block="DS3231 \\| Setting Date & Time $setFullTime"
+    //% setFullTime.defl="ST-15/08/2022-13:13:13"
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Setting Time"
+    export function setTime_byCommands(setFullTime: string): boolean {
+        /**
+         * String handling:
+         * 
+         * The command SetTime input correct is: ST-00/00/0000-00:00:00
+         * With value sequence is: ST-Day/Month/Year-Hour:Minute:Second
+         */
+        if (setFullTime.length == 22) {
+            if (setFullTime.includes("ST") != -1) {
+                if (setFullTime[2] != '-') return false;
+                if (setFullTime[5] != '/') return false;
+                if (setFullTime[8] != '/') return false;
+                if (setFullTime[13] != '-') return false;
+                if (setFullTime[16] != ':') return false;
+                if (setFullTime[19] != ':') return false;
 
-    // /**
-    //  * !
-    //  * @param x ?
-    //  */
-    // //% block="DS3231 \\| ?"
-    // //% inlineInputMode=inline
-    // //% weight=3
-    // //% group="Alarm"
-    // export function setAlarm_byChoose() {
-    //     //
-    // }
+                let day = parseInt(setFullTime.substr(3, 2));
+                let month = parseInt(setFullTime.substr(6, 2));
+                let year = parseInt(setFullTime.substr(9, 4));
 
-    // /**
-    //  * !
-    //  * @param ticks ?
-    //  * @param types ?
-    //  */
-    // //% block="DS3231 \\| Setting Alarm $ticks $types"
-    // //% ticks.defl="SA-15:30"
-    // //% types.defl=Alarm.OneTime
-    // //% inlineInputMode=inline
-    // //% weight=2
-    // //% group="Alarm"
-    // export function setAlarm_byCommands(ticks: string, types: Alarm): boolean {
-    //     return true;
-    // }
+                let hour = parseInt(setFullTime.substr(14, 2));
+                let minute = parseInt(setFullTime.substr(17, 2));
+                let second = parseInt(setFullTime.substr(20, 2));
 
-    // /**
-    //  * !
-    //  */
-    // //% block="DS3231 \\| Check Alarm"
-    // //% inlineInputMode=inline
-    // //% weight=1
-    // //% group="Alarm"
-    // export function checkAlarm(): boolean {
-    //     return true;
-    // }
+                /* --------------------------------------------------------- */
+
+                let buf = pins.createBuffer(8);
+
+                buf[0] = DS3231_REG_SECOND;
+                buf[1] = decToBcd(second);
+                buf[2] = decToBcd(minute);
+                buf[3] = decToBcd(hour);
+                buf[4] = decToBcd(getDS3231DayOfWeek(year, month, day));
+                buf[5] = decToBcd(day);
+                buf[6] = decToBcd(month);
+                buf[7] = decToBcd(year - 2000);
+
+                pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * !
+     * @param hour ?
+     * @param minute ?
+     * @param types ?
+     */
+    //% block="DS3231 \\| Set Alarm at $hour Hour : $minute Minute $types"
+    //% hour.defl=11 hour.min=0 hour.max=23
+    //% minute.defl=30 minute.min=0 minute.max=59
+    //% types.defl=Alarm.OneTime
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Alarm"
+    export function setAlarm_byChoose(hour: number, minute: number, types: Alarm) {
+        alarm[0] = hour;
+        alarm[1] = minute;
+        typeAlarm = types;
+    }
+
+    /**
+     * !
+     * @param ticks ?
+     * @param types ?
+     */
+    //% block="DS3231 \\| Setting Alarm $ticks $types"
+    //% ticks.defl="SA-15:30"
+    //% types.defl=Alarm.OneTime
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Alarm"
+    export function setAlarm_byCommands(ticks: string, types: Alarm): boolean {
+        /**
+         * String handling:
+         * 
+         * The command SetTime input correct is: SA-00:00
+         * With value sequence is: SA-Hour:Minute
+         */
+        if (ticks.length == 8) {
+            if (ticks.includes("SA") != -1) {
+                if (ticks[2] != '-') return false;
+                if (ticks[5] != ':') return false;
+
+                alarm[0] = parseInt(ticks.substr(3, 2));
+                alarm[1] = parseInt(ticks.substr(6, 2));
+                typeAlarm = types;
+
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * !
+     */
+    //% block="DS3231 \\| Check Alarm"
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Alarm"
+    export function checkAlarm(): boolean {
+        if (bcdToDec(regValue(DS3231_REG_HOUR)) == alarm[0]) {
+            if (bcdToDec(regValue(DS3231_REG_MINUTE)) == alarm[1]) {
+                if (typeAlarm == 1) {   // OneTime
+                    alarm[0] = alarm[1] = -1;
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
 }
 
 
