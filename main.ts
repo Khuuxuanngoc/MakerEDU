@@ -779,16 +779,16 @@ namespace ds3231 {
     }
 
     //! Use for Debug
-    //% block="DS3231 \\| Print DATE"
-    export function print_DATE(): string {
-        return get_DATE();
-    }
+    // //% block="DS3231 \\| Print DATE"
+    // export function print_DATE(): string {
+    //     return get_DATE();
+    // }
 
     //! Use for Debug
-    //% block="DS3231 \\| Print TIME"
-    export function print_TIME(): string {
-        return get_TIME();
-    }
+    // //% block="DS3231 \\| Print TIME"
+    // export function print_TIME(): string {
+    //     return get_TIME();
+    // }
 
     /* --------------------------------------------------------------------- */
 
@@ -895,49 +895,37 @@ namespace ds3231 {
     //% weight=6
     //% group="Setting Time"
     export function setTime_byCompiled() {
-        let s = "";
-
-        s = get_DATE(); // mmm dd yyyy
-        let DATE = s.split(" ");
-        s = get_TIME(); // hh:mm:ss
-        let TIME = s.split(":");
+        // let s = "";
+        // s = get_DATE(); // mmm dd yyyy
+        // let DATE = s.split(" ");
+        // s = get_TIME(); // hh:mm:ss
+        // let TIME = s.split(":");
 
         //! Use for Debug
-        serial.writeLine(DATE[1] + " - " + DATE[0] + " - " + DATE[2]);
-        serial.writeLine(TIME[0] + " : " + TIME[1] + " : " + TIME[2]);
-
-        let y = parseInt(DATE[2]);
-        let m: number;
-        switch (DATE[0]) {
-            case "Jan": m = 1;
-            case "Feb": m = 2;
-            case "Mar": m = 3;
-            case "Apr": m = 4;
-            case "May": m = 5;
-            case "Jun": m = 6;
-            case "Jul": m = 7;
-            case "Aug": m = 8;
-            case "Sep": m = 9;
-            case "Oct": m = 10;
-            case "Nov": m = 11;
-            case "Dec": m = 12;
-        }
-        let d = parseInt(DATE[1]);
+        // serial.writeLine(DATE[1] + "-" + DATE[0] + "-" + DATE[2]);
+        // serial.writeLine(TIME[0] + ":" + TIME[1] + ":" + TIME[2]);
 
         /* ----------------------------------------------------------------- */
 
-        let buf = pins.createBuffer(8);
+        let dateTime = new Date();
 
-        buf[0] = DS3231_REG_SECOND;
-        buf[1] = decToBcd(parseInt(TIME[2]));
-        buf[2] = decToBcd(parseInt(TIME[1]));
-        buf[3] = decToBcd(parseInt(TIME[0]));
-        buf[4] = decToBcd(getDS3231DayOfWeek(y, m, d));
-        buf[5] = decToBcd(d);
-        buf[6] = decToBcd(m);
-        buf[7] = decToBcd(y - 2000);
+        //! Use for Debug
+        serial.writeLine(dateTime);
 
-        pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
+        /* ----------------------------------------------------------------- */
+
+        // let buf = pins.createBuffer(8);
+
+        // buf[0] = DS3231_REG_SECOND;
+        // buf[1] = decToBcd(parseInt(TIME[2]));
+        // buf[2] = decToBcd(parseInt(TIME[1]));
+        // buf[3] = decToBcd(parseInt(TIME[0]));
+        // buf[4] = decToBcd(getDS3231DayOfWeek(y, m, d));
+        // buf[5] = decToBcd(d);
+        // buf[6] = decToBcd(m);
+        // buf[7] = decToBcd(y - 2000);
+
+        // pins.i2cWriteBuffer(DS3231_I2C_ADDR, buf);
     }
 
     /**
