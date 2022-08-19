@@ -974,7 +974,7 @@ namespace ds3231 {
          * With value sequence is: ST-Day/Month/Year-Hour:Minute:Second
          */
         if (setFullTime.length == 22) {
-            if (setFullTime.includes("ST") != -1) {
+            if (setFullTime.include("ST") != -1) {
                 if (setFullTime[2] != '-') return false;
                 if (setFullTime[5] != '/') return false;
                 if (setFullTime[8] != '/') return false;
@@ -1051,7 +1051,7 @@ namespace ds3231 {
          * With value sequence is: SA-Hour:Minute
          */
         if (ticks.length == 8) {
-            if (ticks.includes("SA") != -1) {
+            if (ticks.include("SA") != -1) {
                 if (ticks[2] != '-') return false;
                 if (ticks[5] != ':') return false;
 
