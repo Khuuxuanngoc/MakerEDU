@@ -796,8 +796,8 @@ namespace ds3231 {
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
-     * @param calendar ?
+     * Get Day, Month, Year data from DS3231
+     * @param calendar select get data Day, Month or Year
      */
     //% block="DS3231 \\| Get $calendar in Calendar"
     //% calendar.defl=Calendar.Day
@@ -813,7 +813,7 @@ namespace ds3231 {
     }
 
     /**
-     * !
+     * Get "Date of Week" data from DS3231
      */
     //% block="DS3231 \\| Get Days of the Week"
     //% inlineInputMode=inline
@@ -833,8 +833,8 @@ namespace ds3231 {
     }
 
     /**
-     * !
-     * @param clock ?
+     * Get Hour, Minute, Second data from DS3231
+     * @param clock select get data Hour, Minute or Second
      */
     //% block="DS3231 \\| Get $clock in Time now"
     //% clock.defl=Clock.Hour
@@ -850,7 +850,7 @@ namespace ds3231 {
     }
 
     /**
-     * !
+     * Get aggregated __DATE__ data
      */
     //% block="DS3231 \\| Get Calendar"
     //% inlineInputMode=inline
@@ -871,7 +871,7 @@ namespace ds3231 {
     }
 
     /**
-     * !
+     * Get aggregated __TIME__ data
      */
     //% block="DS3231 \\| Get Time now"
     //% inlineInputMode=inline
@@ -926,12 +926,12 @@ namespace ds3231 {
     // }
 
     /**
-     * !
-     * @param day ?
-     * @param month ?
-     * @param year ?
-     * @param hour ?
-     * @param minute ?
+     * Date & Time settings for DS3231
+     * @param day choose Day
+     * @param month choose Month
+     * @param year choose Year
+     * @param hour choose Hour
+     * @param minute choose Minute
      */
     //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
     //% day.defl=1 day.min=1 day.max=31
@@ -958,8 +958,8 @@ namespace ds3231 {
     }
 
     /**
-     * !
-     * @param setFullTime ?
+     * Set the Date & Time for the DS3231 using the command
+     * @param setFullTime install by command according to the syntax "ST-dd/mm/yyyy-hh:mm:ss"
      */
     //% block="DS3231 \\| Setting Date & Time $setFullTime"
     //% setFullTime.defl="ST-15/08/2022-13:13:13"
@@ -1014,10 +1014,10 @@ namespace ds3231 {
     }
 
     /**
-     * !
-     * @param hour ?
-     * @param minute ?
-     * @param types ?
+     * Alarm settings for DS3231
+     * @param hour choose Hour
+     * @param minute choose Minute
+     * @param types alarm once or every day
      */
     //% block="DS3231 \\| Set Alarm at $hour Hour : $minute Minute $types"
     //% hour.defl=11 hour.min=0 hour.max=23
@@ -1033,9 +1033,9 @@ namespace ds3231 {
     }
 
     /**
-     * !
-     * @param ticks ?
-     * @param types ?
+     * Set the Alarm for the DS3231 using the command
+     * @param ticks install by command according to the syntax "ST-hh:mm"
+     * @param types alarm once or every day
      */
     //% block="DS3231 \\| Setting Alarm $ticks $types"
     //% ticks.defl="SA-15:30"
@@ -1069,7 +1069,7 @@ namespace ds3231 {
     }
 
     /**
-     * !
+     * Update the time to see if it's time for the alarm
      */
     //% block="DS3231 \\| Check Alarm"
     //% inlineInputMode=inline
@@ -1093,64 +1093,141 @@ namespace ds3231 {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ------------------------------------------------------------------------- */
 /*                          MODULE DRIVER MOTOR I2C                          */
 /* ------------------------------------------------------------------------- */
 
 //! pxt-driver
 
-//% color="#FEBC68" weight=4 icon="\u26a1" block="MKE-M10"
+//% color="#FEBC68" weight=4 icon="\uf018" block="MKE-M10"
+//% groups="['Control Motor DC', 'Control Servo']"
 namespace driver {
-    //% block
-    export function controlMotor() {
+     export enum Address {
+        //% block="0x40 (64)"
+        add64 = 64,
+        //% block="0x41 (65)"
+        add65 = 65,
+        //% block="0x42 (66)"
+        add66 = 66,
+        //% block="0x43 (67)"
+        add67 = 67,
+        //% block="0x44 (68)"
+        add68 = 68
+    }
+
+    export enum Motor {
+        //% block="A"
+        MotorA,
+        //% block="B"
+        MotorB
+    }
+
+    export enum Rotate {
+        //% block="CW"
+        Clockwise,
+        //% block="CCW"
+        CounterClockwise
+    }
+
+    export enum Pause {
+        //% block="BRAKE (stop now)"
+        Brake,
+        //% block="STOP (release)"
+        Stop
+    }
+
+    export enum Servo {
+        //% block="S1"
+        Servo1,
+        //% block="S2"
+        Servo2
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     * @param addr is I2C address for Driver
+     * @param motor x
+     * @param rotate x
+     * @param speed x
+     */
+    //% block="Driver address $addr \\| Control motor $motor rotation $rotate with speed $speed in (1\\% - 100\\%)"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% motor.defl=Motor.MotorA
+    //% rotate.defl=Rotate.Clockwise
+    //% speed.defl=50 speed.min=1 speed.max=100
+    //% inlineInputMode=inline
+    //% weight=5
+    //% group="Control Motor DC"
+    export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
         //
     }
 
-    //% block
-    export function controlServo() {
+    /**
+     * !
+     * @param addr is I2C address for Driver
+     * @param pause x
+     * @param motor x
+     */
+    //% block="Driver address $addr \\| $pause motor $motor"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% pause.defl=Pause.Brake
+    //% motor.defl=Motor.MotorA
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Control Motor DC"
+    export function pauseMotor(addr: Address, pause: Pause, motor: Motor) {
+        //
+    }
+
+    /**
+     * !
+     * @param addr is I2C address for Driver
+     * @param servo x
+     * @param angle x
+     */
+    //% block="Driver address $addr \\| Control servo $servo with angle $angle in (0° - 180°)"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% servo.defl=Servo.Servo1
+    //% angle.shadow="protractorPicker"
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Control Servo"
+    export function controlServo(addr: Address, servo: Servo, angle: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param addr is I2C address for Driver
+     * @param servo x
+     * @param minPulse x
+     * @param maxPulse x
+     */
+    //% block="Driver address $addr \\| Set range the pulse for servo $servo from $minPulse (Min) to $maxPulse (Max)"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% servo.defl=Servo.Servo1
+    //% minPulse.defl=460 minPulse.min=400 minPulse.max=1000
+    //% maxPulse.defl=2350 maxPulse.min=2000 maxPulse.max=2600
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Control Servo"
+    export function setRangeServo(addr: Address, servo: Servo, minPulse: number, maxPulse: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param addr is I2C address for Driver
+     */
+    //% block="Driver address $addr \\| Release servo $servo"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% servo.defl=Servo.Servo1
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Control Servo"
+    export function releaseServo(addr: Address, servo: Servo) {
         //
     }
 }
