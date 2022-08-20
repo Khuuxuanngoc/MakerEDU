@@ -372,7 +372,7 @@ namespace lcd {
      * 0x3F (63) : PCF8574A
      * 0x27 (39) : PCF8574
      */
-    let _i2cAddr = 39;
+    let _i2cAddr = Address.add39;
 
     /**
      * RS | RW | D7 | D6 | D5 | D4 | D3 | D2 | D1 | D0  <-> Instructions
@@ -1102,7 +1102,7 @@ namespace ds3231 {
 //% color="#FEBC68" weight=4 icon="\uf018" block="MKE-M10"
 //% groups="['Control Motor DC', 'Control Servo']"
 namespace driver {
-     export enum Address {
+    export enum Address {
         //% block="0x40 (64)"
         add64 = 64,
         //% block="0x41 (65)"
@@ -1113,6 +1113,8 @@ namespace driver {
         add67 = 67,
         //% block="0x44 (68)"
         add68 = 68
+        //% block="0x45 (69)"
+        add69 = 69
     }
 
     export enum Motor {
@@ -1145,6 +1147,77 @@ namespace driver {
 
     /* --------------------------------------------------------------------- */
 
+    //! khai báo các biến LET và CONST
+
+    /**
+     * Data frame for Motor DC:
+     * 
+     * addressId    (1 Byte)
+     * modeId       (1 Byte)
+     * index        (1 Byte)
+     * pwm          (1 Byte)
+     * dir          (1 Byte)
+     * checkSum     (1 Byte)
+     */
+    const motorDC_A: number[] = [0, 0, 0, 0, 0, 0];
+    const motorDC_B: number[] = [0, 0, 0, 0, 0, 0];
+
+    /**
+     * Data frame for Motor RC (Servo):
+     * 
+     * addressId    (1 Byte)
+     * modeId       (1 Byte)
+     * index        (1 Byte)
+     * pulse        (2 Byte)
+     * checkSum     (1 Byte)
+     */
+    const motorRC_1: number[] = [0, 0, 0, 0, 0];
+    const motorRC_2: number[] = [0, 0, 0, 0, 0];
+
+    /**
+     * Pulse range information of each servo:
+     * 
+     * pulseMin - default 460   - range from 400 to 1000
+     * pulseMax - default 2350  - range from 2000 to 2600
+     */
+    const infoRC_1: number[] = [0, 0];
+    const infoRC_2: number[] = [0, 0];
+
+    /* --------------------------------------------------------------------- */
+
+    //! khai báo các HÀM
+
+    /* Driver initialization */
+    export function initDriver(addr: number) {
+
+        /* Set "addressId" */
+        motorDC_A[0] = addr;
+        motorDC_B[0] = addr;
+        motorRC_1[0] = addr;
+        motorRC_2[0] = addr;
+
+        /* Set "modeId" */
+        motorDC_A[1] = 1;   // DC_ID
+        motorDC_B[1] = 1;   // DC_ID
+        motorRC_1[1] = 0;   // RC_ID
+        motorRC_2[1] = 0;   // RC_ID
+
+        /* Set "index" */
+        motorDC_A[2] = 0;
+        motorDC_B[2] = 1;
+        motorRC_1[2] = 1;
+        motorRC_2[2] = 2;
+
+        infoRC_1[0] = 460;
+        infoRC_1[1] = 2350;
+        infoRC_2[0] = 460;
+        infoRC_2[1] = 2350;
+
+        //! nhớ thêm lệnh để yêu cầu motor dừng hẳn khi mới khởi tạo lần đầu
+    }
+
+    /* --------------------------------------------------------------------- */
+
     /**
      * !
      * @param addr is I2C address for Driver
@@ -1161,7 +1234,54 @@ namespace driver {
     //% weight=5
     //% group="Control Motor DC"
     export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
-        //
+        let buf = pins.createBuffer(6);
+
+        /* ----------------------------------------------------------------- */
+
+        /**
+         * Convert (%) scale to (PWM) scale
+         * 
+         * (%) - 0   (PWM) - 0
+         * ------- = ---------
+         * 100 - 0    255 - 0
+         */
+        switch (motor) {
+            case Motor.MotorA: {
+                motorDC_A[0] = addr;
+                motorDC_A[3] = Math.round(2.55 * speed);
+                motorDC_A[4] = rotate;
+                motorDC_A[5] = (motorDC_A[0] + motorDC_A[1] + motorDC_A[2] + motorDC_A[3] + motorDC_A[4]) % 256;
+
+                buf[0] = motorDC_A[0];
+                buf[1] = motorDC_A[1];
+                buf[2] = motorDC_A[2];
+                buf[3] = motorDC_A[3];
+                buf[4] = motorDC_A[4];
+                buf[5] = motorDC_A[5];
+
+                break;
+            }
+            case Motor.MotorB: {
+                motorDC_B[0] = addr;
+                motorDC_B[3] = Math.round(2.55 * speed);
+                motorDC_B[4] = rotate;
+                motorDC_B[5] = (motorDC_B[0] + motorDC_B[1] + motorDC_B[2] + motorDC_B[3] + motorDC_B[4]) % 256;
+
+                buf[0] = motorDC_B[0];
+                buf[1] = motorDC_B[1];
+                buf[2] = motorDC_B[2];
+                buf[3] = motorDC_B[3];
+                buf[4] = motorDC_B[4];
+                buf[5] = motorDC_B[5];
+
+                break;
+            }
+        }
+
+        /* ----------------------------------------------------------------- */
+
+        // control.waitMicros(15);
+        pins.i2cWriteBuffer(addr, buf);
     }
 
     /**
@@ -1178,7 +1298,16 @@ namespace driver {
     //% weight=4
     //% group="Control Motor DC"
     export function pauseMotor(addr: Address, pause: Pause, motor: Motor) {
-        //
+        switch (pause) {
+            case Pause.Brake: {
+                controlMotor(addr, motor, Rotate.CounterClockwise, 0);
+                break;
+            }
+            case Pause.Stop: {
+                controlMotor(addr, motor, Rotate.Clockwise, 0);
+                break;
+            }
+        }
     }
 
     /**
@@ -1195,7 +1324,52 @@ namespace driver {
     //% weight=3
     //% group="Control Servo"
     export function controlServo(addr: Address, servo: Servo, angle: number) {
-        //
+        let buf = pins.createBuffer(6);
+
+        /* ----------------------------------------------------------------- */
+
+        /**
+         * Convert (Angle) scale to (Pulse) scale
+         * 
+         * (Angle) - 0    (Pulse) - minPulse
+         * ----------- = -------------------
+         *   180 - 0     maxPulse - minPulse
+         */
+        switch (servo) {
+            case Servo.Servo1: {
+                motorRC_1[0] = addr;
+                motorRC_1[3] = (angle / 180 * (infoRC_1[1] - infoRC_1[0])) + infoRC_1[0];
+                motorRC_1[4] = (motorRC_1[0] + Math.idiv(motorRC_1[3], 256) + (motorRC_1[3] % 256)) % 256;
+
+                buf[0] = motorRC_1[0];
+                buf[1] = motorRC_1[1];
+                buf[2] = motorRC_1[2];
+                buf[3] = Math.idiv(motorRC_1[3], 256);
+                buf[4] = motorRC_1[3] % 256;
+                buf[5] = motorRC_1[4];
+
+                break;
+            }
+            case Servo.Servo2: {
+                motorRC_2[0] = addr;
+                motorRC_2[3] = (angle / 180 * (infoRC_2[1] - infoRC_2[0])) + infoRC_2[0];
+                motorRC_2[4] = (motorRC_2[0] + Math.idiv(motorRC_2[3], 256) + (motorRC_2[3] % 256)) % 256;
+
+                buf[0] = motorRC_2[0];
+                buf[1] = motorRC_2[1];
+                buf[2] = motorRC_2[2];
+                buf[3] = Math.idiv(motorRC_2[3], 256);
+                buf[4] = motorRC_2[3] % 256;
+                buf[5] = motorRC_2[4];
+
+                break;
+            }
+        }
+
+        /* ----------------------------------------------------------------- */
+
+        // control.waitMicros(15);
+        pins.i2cWriteBuffer(addr, buf);
     }
 
     /**
@@ -1214,7 +1388,20 @@ namespace driver {
     //% weight=2
     //% group="Control Servo"
     export function setRangeServo(addr: Address, servo: Servo, minPulse: number, maxPulse: number) {
-        //
+        switch (servo) {
+            case Servo.Servo1: {
+                motorRC_1[0] = addr;
+                infoRC_1[0] = minPulse;
+                infoRC_1[1] = maxPulse;
+                break;
+            }
+            case Servo.Servo2: {
+                motorRC_2[0] = addr;
+                infoRC_2[0] = minPulse;
+                infoRC_2[1] = maxPulse;
+                break;
+            }
+        }
     }
 
     /**
@@ -1228,7 +1415,7 @@ namespace driver {
     //% weight=1
     //% group="Control Servo"
     export function releaseServo(addr: Address, servo: Servo) {
-        //
+        controlServo(addr, servo, 3000);
     }
 }
 
