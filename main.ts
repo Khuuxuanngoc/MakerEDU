@@ -1446,12 +1446,251 @@ namespace driver {
 //! pxt-mp3Player
 
 //% color="#FEBC68" weight=3 icon="\uf001" block="MKE-M11"
+//% groups="['Setting', 'Control', 'Get Info', 'Advanced Control']"
 namespace mp3Player {
-    //% block
-    export function helloWorld() {
+
+    export enum EQ {
+        //% block="Normal"
+        Normal = 0,     // DFPLAYER_EQ_NORMAL
+        //% block="Pop"
+        Pop = 1,        // DFPLAYER_EQ_POP
+        //% block="Rock"
+        Rock = 2,       // DFPLAYER_EQ_ROCK
+        //% block="Jazz"
+        Jazz = 3,       // DFPLAYER_EQ_JAZZ
+        //% block="Classic"
+        Classic = 4,    // DFPLAYER_EQ_CLASSIC
+        //% block="Bass"
+        Bass = 5        // DFPLAYER_EQ_BASS
+    }
+
+    export enum Play {
+        //% block="Next"
+        Next,
+        //% block="Previous"
+        Previous
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    //! let const
+
+    /* --------------------------------------------------------------------- */
+
+    //! hàm
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     */
+    //% block="MP3 Player \\| Up volume"
+    //% inlineInputMode=inline
+    //% weight=13
+    //% group="Setting"
+    export function upVolume() {
+        //myDFPlayer.volumeUp();
+    }
+
+    /**
+     * !
+     */
+    //% block="MP3 Player \\| Down volume"
+    //% inlineInputMode=inline
+    //% weight=12
+    //% group="Setting"
+    export function downVolume() {
+        //myDFPlayer.volumeDown();
+    }
+
+    /**
+     * !
+     * @param volume x
+     */
+    //% block="MP3 Player \\| Set volume level $volume"
+    //% volume.defl=20 volume.min=0 volume.max=30
+    //% inlineInputMode=inline
+    //% weight=11
+    //% group="Setting"
+    export function setVolume(volume: number) {
+        //myDFPlayer.volume(20);
+    }
+
+    /**
+     * !
+     * @param chooseEQ x
+     */
+    //% block="MP3 Player \\| Set EQ $chooseEQ"
+    //% chooseEQ.defl=EQ.Normal
+    //% inlineInputMode=inline
+    //% weight=10
+    //% group="Setting"
+    export function setEQ(chooseEQ: EQ) {
+        //myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+    }
+
+    /**
+     * !
+     * @param file x
+     */
+    //% block="MP3 Player \\| Play file number $file"
+    //% file.defl=1 file.min=0 file.max=65535
+    //% inlineInputMode=inline
+    //% weight=9
+    //% group="Control"
+    export function playFile(file: number) {
+        //myDFPlayer.playMp3Folder(4); //play specific mp3 in SD:/MP3/0004.mp3; File Name(0~65535)
+    }
+
+    /**
+     * !
+     * @param playWhat x
+     */
+    //% block="MP3 Player \\| Play $playWhat"
+    //% playWhat.defl=Play.Next
+    //% inlineInputMode=inline
+    //% weight=8
+    //% group="Control"
+    export function play(playWhat: Play) {
+        //myDFPlayer.next();
+        //myDFPlayer.previous();
+    }
+
+    /**
+     * !
+     */
+    //% block="MP3 Player \\| Pause"
+    //% inlineInputMode=inline
+    //% weight=7
+    //% group="Control"
+    export function pause() {
+        //myDFPlayer.pause();
+    }
+
+    /**
+     * !
+     */
+    //% block="MP3 Player \\| Start (Play continues)"
+    //% inlineInputMode=inline
+    //% weight=6
+    //% group="Control"
+    export function start() {
+        //myDFPlayer.start();
+    }
+
+    /**
+     * !
+     */
+    //% block="MP3 Player \\| Read information setting current"
+    //% inlineInputMode=inline
+    //% weight=5
+    //% group="Get Info"
+    export function getInfo(): string {
+        return '';
+    }
+
+    /**
+     * !
+     * @param file x
+     * @param second x
+     */
+    //% block="MP3 Player \\| Play file number $file in $second seconds"
+    //% file.defl=1 file.min=0 file.max=65535
+    //% second.defl=2.5
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Advanced Control"
+    export function playFileInTime(file: number, second: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param file x
+     */
+    //% block="MP3 Player \\| Play file number $file until done"
+    //% file.defl=1 file.min=0 file.max=65535
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Advanced Control"
+    export function playFileUntilDone(file: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param playWhat x
+     * @param second x
+     */
+    //% block="MP3 Player \\| Play $playWhat in $second seconds"
+    //% playWhat.defl=Play.Next
+    //% second.defl=2.5
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Advanced Control"
+    export function playInTime(playWhat: Play, second: number) {
+        //
+    }
+
+    /**
+     * !
+     * @param playWhat x
+     */
+    //% block="MP3 Player \\| Play $playWhat until done"
+    //% playWhat.defl=Play.Next
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Advanced Control"
+    export function playUntilDone(playWhat: Play) {
         //
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ------------------------------------------------------------------------- */
 /*                               MODULE IR1838                               */
