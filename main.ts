@@ -1113,108 +1113,59 @@ namespace driver {
         add67 = 67,
         //% block="0x44 (68)"
         add68 = 68
-        //% block="0x45 (69)"
-        add69 = 69
+        // //% block="0x45 (69)"
+        // add69 = 69
     }
 
     export enum Motor {
         //% block="A"
-        MotorA,
+        MotorA = 0,
         //% block="B"
-        MotorB
+        MotorB = 1
     }
 
+    /**
+     * CW:  channel A & B (+) = VIN
+     *      channel A & B (-) = GND
+     * 
+     * CCW: channel A & B (-) = VIN
+     *      channel A & B (+) = GND
+     */
     export enum Rotate {
         //% block="CW"
-        Clockwise,
+        Clockwise = 1,
         //% block="CCW"
-        CounterClockwise
+        CounterClockwise = 0
     }
 
     export enum Pause {
         //% block="BRAKE (stop now)"
-        Brake,
+        Brake = 1,
         //% block="STOP (release)"
-        Stop
+        Stop = 0
     }
 
     export enum Servo {
         //% block="S1"
-        Servo1,
+        Servo1 = 0,
         //% block="S2"
-        Servo2
+        Servo2 = 1
     }
 
     /* --------------------------------------------------------------------- */
-
-    //! khai báo các biến LET và CONST
-
-    /**
-     * Data frame for Motor DC:
-     * 
-     * addressId    (1 Byte)
-     * modeId       (1 Byte)
-     * index        (1 Byte)
-     * pwm          (1 Byte)
-     * dir          (1 Byte)
-     * checkSum     (1 Byte)
-     */
-    const motorDC_A: number[] = [0, 0, 0, 0, 0, 0];
-    const motorDC_B: number[] = [0, 0, 0, 0, 0, 0];
-
-    /**
-     * Data frame for Motor RC (Servo):
-     * 
-     * addressId    (1 Byte)
-     * modeId       (1 Byte)
-     * index        (1 Byte)
-     * pulse        (2 Byte)
-     * checkSum     (1 Byte)
-     */
-    const motorRC_1: number[] = [0, 0, 0, 0, 0];
-    const motorRC_2: number[] = [0, 0, 0, 0, 0];
 
     /**
      * Pulse range information of each servo:
      * 
-     * pulseMin - default 460   - range from 400 to 1000
-     * pulseMax - default 2350  - range from 2000 to 2600
+     * [0]  pulseMin    : Default 460. Range from 400 to 1,000
+     * [1]  pulseMax    : Default 2,350. Range from 2,000 to 2,600
      */
-    const infoRC_1: number[] = [0, 0];
-    const infoRC_2: number[] = [0, 0];
+    const infoRC_1: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
+    const infoRC_2: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
 
     /* --------------------------------------------------------------------- */
 
-    //! khai báo các HÀM
-
-    /* Driver initialization */
-    export function initDriver(addr: number) {
-
-        /* Set "addressId" */
-        motorDC_A[0] = addr;
-        motorDC_B[0] = addr;
-        motorRC_1[0] = addr;
-        motorRC_2[0] = addr;
-
-        /* Set "modeId" */
-        motorDC_A[1] = 1;   // DC_ID
-        motorDC_B[1] = 1;   // DC_ID
-        motorRC_1[1] = 0;   // RC_ID
-        motorRC_2[1] = 0;   // RC_ID
-
-        /* Set "index" */
-        motorDC_A[2] = 0;
-        motorDC_B[2] = 1;
-        motorRC_1[2] = 1;
-        motorRC_2[2] = 2;
-
-        infoRC_1[0] = 460;
-        infoRC_1[1] = 2350;
-        infoRC_2[0] = 460;
-        infoRC_2[1] = 2350;
-
-        //! nhớ thêm lệnh để yêu cầu motor dừng hẳn khi mới khởi tạo lần đầu
-    }
+    //! nhớ thêm lệnh để yêu cầu motor dừng hẳn khi mới khởi tạo lần đầu
 
     /* --------------------------------------------------------------------- */
 
@@ -1234,6 +1185,16 @@ namespace driver {
     //% weight=5
     //% group="Control Motor DC"
     export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
+        /**
+         * Data frame for Motor DC:
+         * 
+         * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
+         * [1]  modeId       (1 Byte)   = DC_ID (1)
+         * [2]  index        (1 Byte)   = MotorA (0) & MotorB (1)
+         * [3]  pwm          (1 Byte)   = PWM [0 - 255]
+         * [4]  dir          (1 Byte)   = CW (1) & CCW (0)
+         * [5]  checkSum     (1 Byte)
+         */
         let buf = pins.createBuffer(6);
 
         /* ----------------------------------------------------------------- */
@@ -1245,38 +1206,22 @@ namespace driver {
          * ------- = ---------
          * 100 - 0    255 - 0
          */
+        buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
         switch (motor) {
             case Motor.MotorA: {
-                motorDC_A[0] = addr;
-                motorDC_A[3] = Math.round(2.55 * speed);
-                motorDC_A[4] = rotate;
-                motorDC_A[5] = (motorDC_A[0] + motorDC_A[1] + motorDC_A[2] + motorDC_A[3] + motorDC_A[4]) % 256;
-
-                buf[0] = motorDC_A[0];
-                buf[1] = motorDC_A[1];
-                buf[2] = motorDC_A[2];
-                buf[3] = motorDC_A[3];
-                buf[4] = motorDC_A[4];
-                buf[5] = motorDC_A[5];
-
+                buf[1] = 1; // modeId = DC_ID (1)
+                buf[2] = 0; // index  = MotorA (0)
                 break;
             }
             case Motor.MotorB: {
-                motorDC_B[0] = addr;
-                motorDC_B[3] = Math.round(2.55 * speed);
-                motorDC_B[4] = rotate;
-                motorDC_B[5] = (motorDC_B[0] + motorDC_B[1] + motorDC_B[2] + motorDC_B[3] + motorDC_B[4]) % 256;
-
-                buf[0] = motorDC_B[0];
-                buf[1] = motorDC_B[1];
-                buf[2] = motorDC_B[2];
-                buf[3] = motorDC_B[3];
-                buf[4] = motorDC_B[4];
-                buf[5] = motorDC_B[5];
-
+                buf[1] = 1; // modeId = DC_ID (1)
+                buf[2] = 1; // index  = MotorB (1)
                 break;
             }
         }
+        buf[3] = Math.round(2.55 * speed);                              // pwm = PWM [0 - 255]
+        buf[4] = rotate;                                                // dir = CW (1) & CCW (0)
+        buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
 
         /* ----------------------------------------------------------------- */
 
@@ -1300,11 +1245,11 @@ namespace driver {
     export function pauseMotor(addr: Address, pause: Pause, motor: Motor) {
         switch (pause) {
             case Pause.Brake: {
-                controlMotor(addr, motor, Rotate.CounterClockwise, 0);
+                controlMotor(addr, motor, Rotate.Clockwise, 0);
                 break;
             }
             case Pause.Stop: {
-                controlMotor(addr, motor, Rotate.Clockwise, 0);
+                controlMotor(addr, motor, Rotate.CounterClockwise, 0);
                 break;
             }
         }
@@ -1324,6 +1269,17 @@ namespace driver {
     //% weight=3
     //% group="Control Servo"
     export function controlServo(addr: Address, servo: Servo, angle: number) {
+        /**
+         * Data frame for Motor RC (Servo):
+         * 
+         * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
+         * [1]  modeId       (1 Byte)   = RC_ID (0)
+         * [2]  index        (1 Byte)   = Servo1 (1) & Servo2 (2)
+         * [3]  pulse_H      (1 Byte)   = | PPM [minPulse - maxPulse]
+         * [4]  pulse_L      (1 Byte)     |
+         * [5]  checkSum     (1 Byte)
+         */
+        let pulse: number;
         let buf = pins.createBuffer(6);
 
         /* ----------------------------------------------------------------- */
@@ -1335,36 +1291,24 @@ namespace driver {
          * ----------- = -------------------
          *   180 - 0     maxPulse - minPulse
          */
+        buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
         switch (servo) {
             case Servo.Servo1: {
-                motorRC_1[0] = addr;
-                motorRC_1[3] = (angle / 180 * (infoRC_1[1] - infoRC_1[0])) + infoRC_1[0];
-                motorRC_1[4] = (motorRC_1[0] + Math.idiv(motorRC_1[3], 256) + (motorRC_1[3] % 256)) % 256;
-
-                buf[0] = motorRC_1[0];
-                buf[1] = motorRC_1[1];
-                buf[2] = motorRC_1[2];
-                buf[3] = Math.idiv(motorRC_1[3], 256);
-                buf[4] = motorRC_1[3] % 256;
-                buf[5] = motorRC_1[4];
-
+                pulse = (angle * (infoRC_1[(addr - 64) * 2 + 1] - infoRC_1[(addr - 64) * 2]) / 180) + infoRC_1[0];
+                buf[1] = 0; // modeId = RC_ID (0)
+                buf[2] = 1; // index  = Servo1 (1)
                 break;
             }
             case Servo.Servo2: {
-                motorRC_2[0] = addr;
-                motorRC_2[3] = (angle / 180 * (infoRC_2[1] - infoRC_2[0])) + infoRC_2[0];
-                motorRC_2[4] = (motorRC_2[0] + Math.idiv(motorRC_2[3], 256) + (motorRC_2[3] % 256)) % 256;
-
-                buf[0] = motorRC_2[0];
-                buf[1] = motorRC_2[1];
-                buf[2] = motorRC_2[2];
-                buf[3] = Math.idiv(motorRC_2[3], 256);
-                buf[4] = motorRC_2[3] % 256;
-                buf[5] = motorRC_2[4];
-
+                pulse = (angle * (infoRC_2[(addr - 64) * 2 + 1] - infoRC_2[(addr - 64) * 2]) / 180) + infoRC_2[0];
+                buf[1] = 0; // modeId = RC_ID (0)
+                buf[2] = 2; // index  = Servo2 (2)
                 break;
             }
         }
+        buf[3] = Math.idiv(pulse, 256);                                 // pulse_H
+        buf[4] = pulse % 256;                                           // pulse_L
+        buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
 
         /* ----------------------------------------------------------------- */
 
@@ -1390,15 +1334,13 @@ namespace driver {
     export function setRangeServo(addr: Address, servo: Servo, minPulse: number, maxPulse: number) {
         switch (servo) {
             case Servo.Servo1: {
-                motorRC_1[0] = addr;
-                infoRC_1[0] = minPulse;
-                infoRC_1[1] = maxPulse;
+                infoRC_1[(addr - 64) * 2] = minPulse;
+                infoRC_1[(addr - 64) * 2 + 1] = maxPulse;
                 break;
             }
             case Servo.Servo2: {
-                motorRC_2[0] = addr;
-                infoRC_2[0] = minPulse;
-                infoRC_2[1] = maxPulse;
+                infoRC_2[(addr - 64) * 2] = minPulse;
+                infoRC_2[(addr - 64) * 2 + 1] = maxPulse;
                 break;
             }
         }
@@ -1418,59 +1360,6 @@ namespace driver {
         controlServo(addr, servo, 3000);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ------------------------------------------------------------------------- */
 /*                             MODULE MP3 PLAYER                             */
