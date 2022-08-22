@@ -1225,7 +1225,15 @@ namespace driver {
 
         /* ----------------------------------------------------------------- */
 
-        // control.waitMicros(15);
+        //! Use for Debug
+        // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
+        // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
+        // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
+        // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
+        // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
+        // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
+
+        control.waitMicros(15);
         pins.i2cWriteBuffer(addr, buf);
     }
 
@@ -1312,7 +1320,15 @@ namespace driver {
 
         /* ----------------------------------------------------------------- */
 
-        // control.waitMicros(15);
+        //! Use for Debug
+        // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
+        // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
+        // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
+        // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
+        // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
+        // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
+
+        control.waitMicros(15);
         pins.i2cWriteBuffer(addr, buf);
     }
 
