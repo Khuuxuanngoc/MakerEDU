@@ -1167,13 +1167,52 @@ namespace driver {
 
     /* --------------------------------------------------------------------- */
 
-    /* Driver initialization */
+    /**
+     * Driver initialization
+     * 
+     * First time initialization, remember to turn off all Motor and Servo
+     */
     export function initDriver(addr: number) {
-        /* First time initialization, remember to turn off all Motor and Servo */
-        pauseMotor(addr, Pause.Stop, Motor.MotorB);
-        pauseMotor(addr, Pause.Stop, Motor.MotorA);
-        releaseServo(addr, Servo.Servo2);
-        releaseServo(addr, Servo.Servo1);
+        let buf = pins.createBuffer(6);
+
+        /* Pause Motor B */
+        buf[0] = addr;
+        buf[1] = 1; // modeId = DC_ID (1)
+        buf[2] = 1; // index  = MotorB (1)
+        buf[3] = 0; // pwm    = PWM [0 - 255]
+        buf[4] = 0; // dir    = CCW (0)
+        buf[5] = (buf[0] + 2) % 256;
+        pins.i2cWriteBuffer(addr, buf);
+        control.waitMicros(15);
+
+        /* Pause Motor A */
+        buf[0] = addr;
+        buf[1] = 1; // modeId = DC_ID (1)
+        buf[2] = 0; // index  = MotorA (0)
+        buf[3] = 0; // pwm    = PWM [0 - 255]
+        buf[4] = 0; // dir    = CCW (0)
+        buf[5] = (buf[0] + 1) % 256;
+        pins.i2cWriteBuffer(addr, buf);
+        control.waitMicros(15);
+
+        /* Release Servo 2 */
+        buf[0] = addr;
+        buf[1] = 0;     // modeId = RC_ID (0)
+        buf[2] = 2;     // index  = Servo2 (2)
+        buf[3] = 11;    // pulse_H (0x0B)
+        buf[4] = 184;   // pulse_L (0xB8)
+        buf[5] = (buf[0] + 197) % 256;
+        pins.i2cWriteBuffer(addr, buf);
+        control.waitMicros(15);
+
+        /* Release Servo 1 */
+        buf[0] = addr;
+        buf[1] = 0;     // modeId = RC_ID (0)
+        buf[2] = 1;     // index  = Servo1 (1)
+        buf[3] = 11;    // pulse_H (0x0B)
+        buf[4] = 184;   // pulse_L (0xB8)
+        buf[5] = (buf[0] + 196) % 256;
+        control.waitMicros(15);
     }
 
     /* --------------------------------------------------------------------- */
@@ -1248,8 +1287,8 @@ namespace driver {
         // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
         // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
 
-        control.waitMicros(15);
         pins.i2cWriteBuffer(addr, buf);
+        control.waitMicros(15);
     }
 
     /**
@@ -1349,8 +1388,8 @@ namespace driver {
         // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
         // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
 
-        control.waitMicros(15);
         pins.i2cWriteBuffer(addr, buf);
+        control.waitMicros(15);
     }
 
     /**
