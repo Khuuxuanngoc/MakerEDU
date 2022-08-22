@@ -1179,7 +1179,7 @@ namespace driver {
         buf[0] = addr;
         buf[1] = 1; // modeId = DC_ID (1)
         buf[2] = 1; // index  = MotorB (1)
-        buf[3] = 0; // pwm    = PWM [0 - 255]
+        buf[3] = 0; // pwm    = PWM (0)
         buf[4] = 0; // dir    = CCW (0)
         buf[5] = (buf[0] + 2) % 256;
         pins.i2cWriteBuffer(addr, buf);
@@ -1189,7 +1189,7 @@ namespace driver {
         buf[0] = addr;
         buf[1] = 1; // modeId = DC_ID (1)
         buf[2] = 0; // index  = MotorA (0)
-        buf[3] = 0; // pwm    = PWM [0 - 255]
+        buf[3] = 0; // pwm    = PWM (0)
         buf[4] = 0; // dir    = CCW (0)
         buf[5] = (buf[0] + 1) % 256;
         pins.i2cWriteBuffer(addr, buf);
@@ -1218,11 +1218,11 @@ namespace driver {
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
+     * Control DC motor with parameters: speed & direction of rotation
      * @param addr is I2C address for Driver
-     * @param motor x
-     * @param rotate x
-     * @param speed x
+     * @param motor choose motor A or motor B
+     * @param rotate set the motor rotation direction
+     * @param speed set the rotational speed of the motor
      */
     //% block="Driver address $addr \\| Control motor $motor rotation $rotate with speed $speed in (1\\% - 100\\%)"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -1292,10 +1292,10 @@ namespace driver {
     }
 
     /**
-     * !
+     * Make the engine stop immediately, or release
      * @param addr is I2C address for Driver
-     * @param pause x
-     * @param motor x
+     * @param pause make Brake or Stop motor
+     * @param motor choose motor A or motor B
      */
     //% block="Driver address $addr \\| $pause motor $motor"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -1318,10 +1318,10 @@ namespace driver {
     }
 
     /**
-     * !
+     * Control RC motor (Servo) with parameter: angle
      * @param addr is I2C address for Driver
-     * @param servo x
-     * @param angle x
+     * @param servo choose Servo 1 or Servo 2
+     * @param angle set the rotation angle of Servo
      */
     //% block="Driver address $addr \\| Control servo $servo with angle $angle in (0° - 180°)"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -1393,11 +1393,11 @@ namespace driver {
     }
 
     /**
-     * !
+     * Set the PPW pulse range for Servo
      * @param addr is I2C address for Driver
-     * @param servo x
-     * @param minPulse x
-     * @param maxPulse x
+     * @param servo choose Servo 1 or Servo 2
+     * @param minPulse set the PPM pulse to the minimum allowed width
+     * @param maxPulse set the PPM pulse to the maximum allowed width
      */
     //% block="Driver address $addr \\| Set range the pulse for servo $servo from $minPulse (Min) to $maxPulse (Max)"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -1423,7 +1423,7 @@ namespace driver {
     }
 
     /**
-     * !
+     * Release Servo
      * @param addr is I2C address for Driver
      */
     //% block="Driver address $addr \\| Release servo $servo"
@@ -1477,12 +1477,12 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
-    //! hàm
+    //! function
 
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
+     * Perform volume up
      */
     //% block="MP3 Player \\| Up volume"
     //% inlineInputMode=inline
@@ -1493,7 +1493,7 @@ namespace mp3Player {
     }
 
     /**
-     * !
+     * Perform volume down
      */
     //% block="MP3 Player \\| Down volume"
     //% inlineInputMode=inline
@@ -1504,8 +1504,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param volume x
+     * Perform volume adjustment
+     * @param volume select sound level from 0 to 30
      */
     //% block="MP3 Player \\| Set volume level $volume"
     //% volume.defl=20 volume.min=0 volume.max=30
@@ -1517,8 +1517,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param chooseEQ x
+     * Adjust the EQ of the sound
+     * @param chooseEQ select EQ format
      */
     //% block="MP3 Player \\| Set EQ $chooseEQ"
     //% chooseEQ.defl=EQ.Normal
@@ -1530,8 +1530,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param file x
+     * Play the music file of your choice
+     * @param file select the music file you want to play
      */
     //% block="MP3 Player \\| Play file number $file"
     //% file.defl=1 file.min=0 file.max=65535
@@ -1543,8 +1543,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param playWhat x
+     * Play the next or previous music file compared to the current music file
+     * @param playWhat choose to play next or previous music file
      */
     //% block="MP3 Player \\| Play $playWhat"
     //% playWhat.defl=Play.Next
@@ -1557,7 +1557,7 @@ namespace mp3Player {
     }
 
     /**
-     * !
+     * Pause the currently playing file
      */
     //% block="MP3 Player \\| Pause"
     //% inlineInputMode=inline
@@ -1568,7 +1568,7 @@ namespace mp3Player {
     }
 
     /**
-     * !
+     * Play continues with paused file music
      */
     //% block="MP3 Player \\| Start (Play continues)"
     //% inlineInputMode=inline
@@ -1579,7 +1579,7 @@ namespace mp3Player {
     }
 
     /**
-     * !
+     * Get the parameters being set in MP3 Player
      */
     //% block="MP3 Player \\| Read information setting current"
     //% inlineInputMode=inline
@@ -1590,9 +1590,9 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param file x
-     * @param second x
+     * Play a music file of your choice for a certain amount of time
+     * @param file select the music file you want to play
+     * @param second set how long you want to play that file
      */
     //% block="MP3 Player \\| Play file number $file in $second seconds"
     //% file.defl=1 file.min=0 file.max=65535
@@ -1605,8 +1605,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param file x
+     * Play the music file of your choice until the song is over
+     * @param file select the music file you want to play
      */
     //% block="MP3 Player \\| Play file number $file until done"
     //% file.defl=1 file.min=0 file.max=65535
@@ -1618,9 +1618,9 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param playWhat x
-     * @param second x
+     * Play next or previous music file for a certain amount of time
+     * @param playWhat choose to play next or previous music file
+     * @param second set how long you want to play that file
      */
     //% block="MP3 Player \\| Play $playWhat in $second seconds"
     //% playWhat.defl=Play.Next
@@ -1633,8 +1633,8 @@ namespace mp3Player {
     }
 
     /**
-     * !
-     * @param playWhat x
+     * Play next or previous music file until the song is over
+     * @param playWhat choose to play next or previous music file
      */
     //% block="MP3 Player \\| Play $playWhat until done"
     //% playWhat.defl=Play.Next
