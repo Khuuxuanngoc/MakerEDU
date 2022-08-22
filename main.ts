@@ -1163,9 +1163,18 @@ namespace driver {
     const infoRC_1: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
     const infoRC_2: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
 
+    const _initOneTime: boolean[] = [false, false, false, false, false];
+
     /* --------------------------------------------------------------------- */
 
-    //! nhớ thêm lệnh để yêu cầu motor dừng hẳn khi mới khởi tạo lần đầu
+    /* Driver initialization */
+    export function initDriver(addr: number) {
+        /* First time initialization, remember to turn off all Motor and Servo */
+        pauseMotor(addr, Pause.Stop, Motor.MotorB);
+        pauseMotor(addr, Pause.Stop, Motor.MotorA);
+        releaseServo(addr, Servo.Servo2);
+        releaseServo(addr, Servo.Servo1);
+    }
 
     /* --------------------------------------------------------------------- */
 
@@ -1185,6 +1194,12 @@ namespace driver {
     //% weight=5
     //% group="Control Motor DC"
     export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
+        /* Make sure to initialize each Driver once */
+        if (!_initOneTime[addr - 64]) {
+            initDriver(addr);
+            _initOneTime[addr - 64] = true;
+        }
+        
         /**
          * Data frame for Motor DC:
          * 
@@ -1277,6 +1292,12 @@ namespace driver {
     //% weight=3
     //% group="Control Servo"
     export function controlServo(addr: Address, servo: Servo, angle: number) {
+        /* Make sure to initialize each Driver once */
+        if (!_initOneTime[addr - 64]) {
+            initDriver(addr);
+            _initOneTime[addr - 64] = true;
+        }
+        
         /**
          * Data frame for Motor RC (Servo):
          * 
