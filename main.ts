@@ -1238,7 +1238,7 @@ namespace driver {
             initDriver(addr);
             _initOneTime[addr - 64] = true;
         }
-        
+
         /**
          * Data frame for Motor DC:
          * 
@@ -1336,7 +1336,7 @@ namespace driver {
             initDriver(addr);
             _initOneTime[addr - 64] = true;
         }
-        
+
         /**
          * Data frame for Motor RC (Servo):
          * 
@@ -1448,36 +1448,117 @@ namespace driver {
 //% color="#FEBC68" weight=3 icon="\uf001" block="MKE-M11"
 //% groups="['Setting', 'Control', 'Get Info', 'Advanced Control']"
 namespace mp3Player {
-
     export enum EQ {
         //% block="Normal"
-        Normal = 0,     // DFPLAYER_EQ_NORMAL
+        Normal = 0x00,  // DFPLAYER_EQ_NORMAL
         //% block="Pop"
-        Pop = 1,        // DFPLAYER_EQ_POP
+        Pop = 0x01,     // DFPLAYER_EQ_POP
         //% block="Rock"
-        Rock = 2,       // DFPLAYER_EQ_ROCK
+        Rock = 0x02,    // DFPLAYER_EQ_ROCK
         //% block="Jazz"
-        Jazz = 3,       // DFPLAYER_EQ_JAZZ
+        Jazz = 0x03,    // DFPLAYER_EQ_JAZZ
         //% block="Classic"
-        Classic = 4,    // DFPLAYER_EQ_CLASSIC
+        Classic = 0x04, // DFPLAYER_EQ_CLASSIC
         //% block="Bass"
-        Bass = 5        // DFPLAYER_EQ_BASS
+        Bass = 0x05     // DFPLAYER_EQ_BASS
     }
 
-    export enum Play {
+    export enum PlayWhat {
         //% block="Next"
-        Next,
+        Next = 0x01,
         //% block="Previous"
-        Previous
+        Previous = 0x02
     }
 
     /* --------------------------------------------------------------------- */
 
-    //! let const
+    const Play: number = 0x0D;
+    const Pause: number = 0x0E;
+    const Stop: number = 0x16;
+
+    let _isConnected = false;
+
+    /**
+     * Serial Mode: Instruction Description
+     * 
+     * Format: $S - VER - Len - CMD - Feedback - para1 - para2 - checksum - $O
+     * |
+     * [0] $S       : start bit                         0x7E
+     * [1] VER      : version information               0xFF
+     * [2] Len      : the number of bytes after "Len"   0x06
+     * [3] CMD      : indicate the specific operations  -> 1 Byte
+     * [4] Feedback : feedback (1) / no feedback (0)    -> 1 Byte
+     * [5] para1    : query high data byte              -> 1 Byte
+     * [6] para2    : query low data byte               -> 1 Byte
+     * [7] checksum : accumulation and verification     -> 2 Byte
+     * [8]          = 0 - ( [1] + [2] + [3] + [4] + [5] + [6] )
+     * [9] $O       : end bit                           0xEF
+     */
+    const dataArr: number[] = [0x7E, 0xFF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEF];
 
     /* --------------------------------------------------------------------- */
 
-    //! function
+    /* Connect to MP3 Player */
+    export function connect() {
+        /**
+         * Configure the serial port to use the pins instead of USB
+         * 
+         * function serial.redirect(tx: SerialPin, rx: SerialPin, rate: BaudRate): void;
+         * tx   : the transmit pin to send serial data on
+         * rx   : the receive pin to receive serial data on
+         * rate : the baud rate for transmitting and receiving data
+         * 
+         * MP3Player <----> MicroBit
+         * RX               P14 (TX)
+         * TX               P13 (RX)
+         */
+        serial.redirect(SerialPin.P14, SerialPin.P13, BaudRate.BaudRate9600);
+
+        _isConnected = true;
+        basic.pause(100);
+    }
+
+    /* Calculate Checksum */
+    export function checkSum() {
+        /**
+         * 2 Byte (16 bit)
+         * 
+         * 0 - 1 = -1 : 0xFFFF : 65,535 = 65,536 - 1
+         * 0 - 2 = -2 : 0xFFFE : 65,534 = 65,536 - 2
+         * ...
+         */
+        let total = 65536 - dataArr[1] + dataArr[2] + dataArr[3] + dataArr[4] + dataArr[5] + dataArr[6];
+
+        dataArr[7] = total >> 8;    // para_H
+        dataArr[8] = total & 0xFF;  // para_L
+    }
+
+    /* Send commands to MP3 Player */
+    export function sendData() {
+        let buf = pins.createBuffer(10);
+
+        for (let index = 0; index < 10; index++) {
+            buf.setNumber(NumberFormat.UInt8LE, index, dataArr[index])
+        }
+        serial.writeBuffer(buf);
+
+        basic.pause(100);
+    }
+
+    /* Start the process of sending commands via Serial */
+    export function innerCall(CMD: number, para1: number, para2: number) {
+        /* Make sure MP3Player is connected */
+        if (!_isConnected) {
+            connect();
+        }
+
+        dataArr[3] = CMD;
+        dataArr[5] = para1;
+        dataArr[6] = para2;
+
+        checkSum();
+        sendData();
+    }
 
     /* --------------------------------------------------------------------- */
 
@@ -1547,11 +1628,11 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      */
     //% block="MP3 Player \\| Play $playWhat"
-    //% playWhat.defl=Play.Next
+    //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=8
     //% group="Control"
-    export function play(playWhat: Play) {
+    export function play(playWhat: PlayWhat) {
         //myDFPlayer.next();
         //myDFPlayer.previous();
     }
@@ -1623,12 +1704,12 @@ namespace mp3Player {
      * @param second set how long you want to play that file
      */
     //% block="MP3 Player \\| Play $playWhat in $second seconds"
-    //% playWhat.defl=Play.Next
+    //% playWhat.defl=PlayWhat.Next
     //% second.defl=2.5
     //% inlineInputMode=inline
     //% weight=2
     //% group="Advanced Control"
-    export function playInTime(playWhat: Play, second: number) {
+    export function playInTime(playWhat: PlayWhat, second: number) {
         //
     }
 
@@ -1637,11 +1718,11 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      */
     //% block="MP3 Player \\| Play $playWhat until done"
-    //% playWhat.defl=Play.Next
+    //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=1
     //% group="Advanced Control"
-    export function playUntilDone(playWhat: Play) {
+    export function playUntilDone(playWhat: PlayWhat) {
         //
     }
 }
