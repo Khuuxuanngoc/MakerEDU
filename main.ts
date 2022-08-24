@@ -543,7 +543,7 @@ namespace lcd {
             case 0: cursor = 0x80; break;
             case 1: cursor = 0xC0; break;   // 0x80 + 0x40
             case 2: cursor = 0x94; break;   // 0x80 + 0x14
-            case 3: cursor = 0xD4;          // 0xC0 + 0x14
+            case 3: cursor = 0xD4; break;   // 0xC0 + 0x14
         }
         cursor += (col - 1);
         cmd(cursor);
@@ -1472,10 +1472,6 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
-    const Play: number = 0x0D;
-    const Pause: number = 0x0E;
-    const Stop: number = 0x16;
-
     let _isConnected = false;
 
     /**
@@ -1495,6 +1491,8 @@ namespace mp3Player {
      * [9] $O       : end bit                           0xEF
      */
     const dataArr: number[] = [0x7E, 0xFF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEF];
+
+    let _timeOutTimer: number;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     /* --------------------------------------------------------------------- */
 
@@ -1542,6 +1540,7 @@ namespace mp3Player {
         }
         serial.writeBuffer(buf);
 
+        _timeOutTimer = input.runningTime();//!!!!!!!!!!!!!!!!
         basic.pause(100);
     }
 
@@ -1562,6 +1561,300 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
+    const DFPlayerCardInserted: number = 2;
+    const DFPlayerCardRemoved: number = 3;
+    const DFPlayerCardOnline: number = 4;
+    const DFPlayerPlayFinished: number = 5;
+    const DFPlayerError: number = 6;
+    const DFPlayerUSBInserted: number = 7;
+    const DFPlayerUSBRemoved: number = 8;
+    const DFPlayerUSBOnline: number = 9;
+    const DFPlayerCardUSBOnline: number = 10;
+    const DFPlayerFeedBack: number = 11;
+
+    const Stack_Version: number = 1;
+    const Stack_Length: number = 2;
+    const Stack_End: number = 9;
+
+    const TimeOut: number = 0;
+    const WrongStack: number = 1;
+
+    let _isAvailable = false;
+    let _handleType: number;
+    let _handleParameter: number;
+    let _receivedIndex = 0;
+    let _isSending = false;
+    let _handleCommand: number;
+
+    const _received: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    export function handleMessage(type: number, parameter: number): boolean {
+        _receivedIndex = 0;
+        _handleType = type;
+        _handleParameter = parameter;
+        _isAvailable = true;
+        return _isAvailable;
+    }
+
+    export function handleError(type: number, parameter: number): boolean {
+        handleMessage(type, parameter);
+        _isSending = false;
+        return false;
+    }
+
+    export function validateStack(): boolean {
+        let calCheckSum = 65536 - _received[1] + _received[2]
+            + _received[3] + _received[4]
+            + _received[5] + _received[6];
+        let revCheckSum = _received[7] * 256 + _received[8];
+
+        return calCheckSum == revCheckSum;
+    }
+
+    export function parseStack() {
+        let handleCommand = _received[3];
+        if (handleCommand == 0x41) { //handle the 0x41 ack feedback as a spcecial case, in case the pollusion of _handleCommand, _handleParameter, and _handleType.
+            _isSending = false;
+            return;
+        }
+
+        _handleCommand = handleCommand;
+        _handleParameter = _received[5] * 256 + _received[6];
+
+        switch (_handleCommand) {
+            case 0x3D:
+                handleMessage(DFPlayerPlayFinished, _handleParameter);
+                break;
+            case 0x3F:
+                if (_handleParameter & 0x01) {
+                    handleMessage(DFPlayerUSBOnline, _handleParameter);
+                }
+                else if (_handleParameter & 0x02) {
+                    handleMessage(DFPlayerCardOnline, _handleParameter);
+                }
+                else if (_handleParameter & 0x03) {
+                    handleMessage(DFPlayerCardUSBOnline, _handleParameter);
+                }
+                break;
+            case 0x3A:
+                if (_handleParameter & 0x01) {
+                    handleMessage(DFPlayerUSBInserted, _handleParameter);
+                }
+                else if (_handleParameter & 0x02) {
+                    handleMessage(DFPlayerCardInserted, _handleParameter);
+                }
+                break;
+            case 0x3B:
+                if (_handleParameter & 0x01) {
+                    handleMessage(DFPlayerUSBRemoved, _handleParameter);
+                }
+                else if (_handleParameter & 0x02) {
+                    handleMessage(DFPlayerCardRemoved, _handleParameter);
+                }
+                break;
+            case 0x40:
+                handleMessage(DFPlayerError, _handleParameter);
+                break;
+            case 0x3C:
+            case 0x3E:
+            case 0x42:
+            case 0x43:
+            case 0x44:
+            case 0x45:
+            case 0x46:
+            case 0x47:
+            case 0x48:
+            case 0x49:
+            case 0x4B:
+            case 0x4C:
+            case 0x4D:
+            case 0x4E:
+            case 0x4F:
+                handleMessage(DFPlayerFeedBack, _handleParameter);
+                break;
+            default:
+                handleError(WrongStack, 0);
+                break;
+        }
+    }
+
+    export function available(): boolean {
+        let data = serial.readBuffer(1);
+        while (data.length > 0) {
+            if (_receivedIndex == 0) {
+                _received[0] = data;
+                if (_received[0] == 0x7E) {
+                    _receivedIndex++;
+                }
+            }
+            else {
+                _received[_receivedIndex] = data;
+                switch (_receivedIndex) {
+                    case Stack_Version:
+                        if (_received[_receivedIndex] != 0xFF) {
+                            return handleError(WrongStack, 0);
+                        }
+                        break;
+                    case Stack_Length:
+                        if (_received[_receivedIndex] != 0x06) {
+                            return handleError(WrongStack, 0);
+                        }
+                        break;
+                    case Stack_End:
+                        if (_received[_receivedIndex] != 0xEF) {
+                            return handleError(WrongStack, 0);
+                        }
+                        else {
+                            if (validateStack()) {
+                                _receivedIndex = 0;
+                                parseStack();
+                                return _isAvailable;
+                            }
+                            else {
+                                return handleError(WrongStack, 0);
+                            }
+                        }
+                    default:
+                        break;
+                }
+                _receivedIndex++;
+            }
+            data = serial.readBuffer(1);
+        }
+
+        if (_isSending && (input.runningTime() - _timeOutTimer >= 500)) {
+            return handleError(TimeOut, 0);    // Over timeout 500ms
+        }
+
+        return _isAvailable;
+    }
+
+    export function waitAvailable(): boolean {
+        let wait = input.runningTime();
+        while (!available()) {
+            if (input.runningTime() - wait > 500) {
+                return false;   // Over timeout 500ms
+            }
+        }
+        return true;
+    }
+
+    export function readType(): number {
+        _isAvailable = false;
+        return _handleType;
+    }
+
+    export function read(): number {
+        _isAvailable = false;
+        return _handleParameter;
+    }
+
+    export function readEQ(): number {
+        /* Query the current EQ */
+        innerCall(0x44, 0x00, 0x00);
+
+        if (waitAvailable()) {
+            if (readType() == DFPlayerFeedBack)
+                return read();
+            else
+                return -1;
+        }
+        else {
+            return -1;
+        }
+    }
+
+    export function readFileCounts(): number {
+        /* Query the total number of U-disk files */
+        innerCall(0x48, 0x00, 0x00);
+
+        if (waitAvailable()) {
+            if (readType() == DFPlayerFeedBack)
+                return read();
+            else
+                return -1;
+        }
+        else {
+            return -1;
+        }
+    }
+
+    export function readVolume(): number {
+        /* Query the current volume */
+        innerCall(0x43, 0x00, 0x00);
+
+        if (waitAvailable()) {
+            return read();
+        }
+        else {
+            return -1;
+        }
+    }
+
+    export function getInfoMP3(): string {
+        let info = "";
+        let typeEQ = "";
+
+        switch (readEQ()) {
+            case 0: typeEQ = "Normal"; break;
+            case 1: typeEQ = "Pop"; break;
+            case 2: typeEQ = "Rock"; break;
+            case 3: typeEQ = "Jazz"; break;
+            case 4: typeEQ = "Classic"; break;
+            case 5: typeEQ = "Bass"; break;
+        }
+
+        info = convertToText(readFileCounts()) + " files in SD Card.\n"
+            + "Volume " + convertToText(readVolume()) + ".\n"
+            + "EQ " + typeEQ + ".";
+
+        return info;
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /* Stop playing music after a period of time */
+    export function playInPeriod(second: number) {
+        let wait = input.runningTime() + 1000 * second;
+        while (input.runningTime() <= wait) { }
+
+        /* Pause */
+        innerCall(0x0E, 0x00, 0x00);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    // void waitFinishMusic()
+    // {
+    //     byte count = 0;
+    //     bool wrongStack = false;
+    //     bool timeOut = false;
+    //     while (1)
+    //     {
+    //         if (myDFPlayer.available())
+    //         {
+    //         if (myDFPlayer.readType() == DFPlayerPlayFinished)
+    //         {
+    //             count++;
+    //             if (count == 2) {break;}
+    //         }
+    //         else
+    //         {
+    //             if (myDFPlayer.readType() == WrongStack) {wrongStack = true;}
+    //             else if (myDFPlayer.readType() == TimeOut) {timeOut = true;}
+    //             //
+    //             if (wrongStack && timeOut) {break;}
+    //         }
+    //         }
+    //     }
+    // }
+
+    export function waitFinishMusic() {
+        //
+    }
+
+    /* --------------------------------------------------------------------- */
+
     /**
      * Perform volume up
      */
@@ -1570,7 +1863,8 @@ namespace mp3Player {
     //% weight=13
     //% group="Setting"
     export function upVolume() {
-        //myDFPlayer.volumeUp();
+        // DFRobotDFPlayerMini::volumeUp()
+        innerCall(0x04, 0x00, 0x00);
     }
 
     /**
@@ -1581,7 +1875,8 @@ namespace mp3Player {
     //% weight=12
     //% group="Setting"
     export function downVolume() {
-        //myDFPlayer.volumeDown();
+        // DFRobotDFPlayerMini::volumeDown()
+        innerCall(0x05, 0x00, 0x00);
     }
 
     /**
@@ -1594,7 +1889,8 @@ namespace mp3Player {
     //% weight=11
     //% group="Setting"
     export function setVolume(volume: number) {
-        //myDFPlayer.volume(20);
+        // DFRobotDFPlayerMini::volume(uint8_t volume)
+        innerCall(0x06, 0x00, volume);
     }
 
     /**
@@ -1607,7 +1903,8 @@ namespace mp3Player {
     //% weight=10
     //% group="Setting"
     export function setEQ(chooseEQ: EQ) {
-        //myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+        // DFRobotDFPlayerMini::EQ(uint8_t eq)
+        innerCall(0x07, 0x00, chooseEQ);
     }
 
     /**
@@ -1620,7 +1917,11 @@ namespace mp3Player {
     //% weight=9
     //% group="Control"
     export function playFile(file: number) {
-        //myDFPlayer.playMp3Folder(4); //play specific mp3 in SD:/MP3/0004.mp3; File Name(0~65535)
+        /**
+         * Play specific mp3 in SD:/MP3/0000.mp3; File Name (0 ~ 65,535)
+         * DFRobotDFPlayerMini::playMp3Folder(int fileNumber)
+         */
+        innerCall(0x12, file >> 8, file & 0xFF);
     }
 
     /**
@@ -1633,8 +1934,7 @@ namespace mp3Player {
     //% weight=8
     //% group="Control"
     export function play(playWhat: PlayWhat) {
-        //myDFPlayer.next();
-        //myDFPlayer.previous();
+        innerCall(playWhat, 0x00, 0x00);
     }
 
     /**
@@ -1645,7 +1945,8 @@ namespace mp3Player {
     //% weight=7
     //% group="Control"
     export function pause() {
-        //myDFPlayer.pause();
+        // DFRobotDFPlayerMini::pause()
+        innerCall(0x0E, 0x00, 0x00);
     }
 
     /**
@@ -1656,7 +1957,8 @@ namespace mp3Player {
     //% weight=6
     //% group="Control"
     export function start() {
-        //myDFPlayer.start();
+        // DFRobotDFPlayerMini::start()
+        innerCall(0x0D, 0x00, 0x00);
     }
 
     /**
@@ -1667,7 +1969,7 @@ namespace mp3Player {
     //% weight=5
     //% group="Get Info"
     export function getInfo(): string {
-        return '';
+        return getInfoMP3();
     }
 
     /**
@@ -1682,7 +1984,8 @@ namespace mp3Player {
     //% weight=4
     //% group="Advanced Control"
     export function playFileInTime(file: number, second: number) {
-        //
+        playFile(file);
+        playInPeriod(second);
     }
 
     /**
@@ -1695,7 +1998,8 @@ namespace mp3Player {
     //% weight=3
     //% group="Advanced Control"
     export function playFileUntilDone(file: number) {
-        //
+        playFile(file);
+        waitFinishMusic();
     }
 
     /**
@@ -1710,7 +2014,8 @@ namespace mp3Player {
     //% weight=2
     //% group="Advanced Control"
     export function playInTime(playWhat: PlayWhat, second: number) {
-        //
+        play(playWhat);
+        playInPeriod(second);
     }
 
     /**
@@ -1723,7 +2028,8 @@ namespace mp3Player {
     //% weight=1
     //% group="Advanced Control"
     export function playUntilDone(playWhat: PlayWhat) {
-        //
+        play(playWhat);
+        waitFinishMusic();
     }
 }
 
