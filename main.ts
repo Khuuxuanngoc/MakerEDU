@@ -1682,13 +1682,13 @@ namespace mp3Player {
         let data = serial.readBuffer(1);
         while (data.length > 0) {
             if (_receivedIndex == 0) {
-                _received[0] = data;
+                _received[0] = data.getNumber(NumberFormat.Int8LE, 0);
                 if (_received[0] == 0x7E) {
                     _receivedIndex++;
                 }
             }
             else {
-                _received[_receivedIndex] = data;
+                _received[_receivedIndex] = data.getNumber(NumberFormat.Int8LE, 0);
                 switch (_receivedIndex) {
                     case Stack_Version:
                         if (_received[_receivedIndex] != 0xFF) {
