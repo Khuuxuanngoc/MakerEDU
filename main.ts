@@ -1602,9 +1602,7 @@ namespace mp3Player {
     }
 
     export function validateStack(): boolean {
-        let calCheckSum = 65536 - _received[1] + _received[2]
-            + _received[3] + _received[4]
-            + _received[5] + _received[6];
+        let calCheckSum = 65536 - (_received[1] + _received[2] + _received[3] + _received[4] + _received[5] + _received[6]);
         let revCheckSum = _received[7] * 256 + _received[8];
 
         return calCheckSum == revCheckSum;
