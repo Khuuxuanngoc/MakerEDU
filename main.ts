@@ -1551,7 +1551,7 @@ namespace mp3Player {
          * 0 - 2 = -2 : 0xFFFE : 65,534 = 65,536 - 2
          * ...
          */
-        let total = 65536 - dataArr[1] + dataArr[2] + dataArr[3] + dataArr[4] + dataArr[5] + dataArr[6];
+        let total = 65536 - (dataArr[1] + dataArr[2] + dataArr[3] + dataArr[4] + dataArr[5] + dataArr[6]);
 
         dataArr[7] = total >> 8;    // para_H
         dataArr[8] = total & 0xFF;  // para_L
