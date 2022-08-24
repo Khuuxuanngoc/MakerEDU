@@ -1492,7 +1492,33 @@ namespace mp3Player {
      */
     const dataArr: number[] = [0x7E, 0xFF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEF];
 
+    const DFPlayerCardInserted: number = 2;
+    const DFPlayerCardRemoved: number = 3;
+    const DFPlayerCardOnline: number = 4;
+    const DFPlayerPlayFinished: number = 5;
+    const DFPlayerError: number = 6;
+    const DFPlayerUSBInserted: number = 7;
+    const DFPlayerUSBRemoved: number = 8;
+    const DFPlayerUSBOnline: number = 9;
+    const DFPlayerCardUSBOnline: number = 10;
+    const DFPlayerFeedBack: number = 11;
+
+    const Stack_Version: number = 1;
+    const Stack_Length: number = 2;
+    const Stack_End: number = 9;
+
+    const TimeOut: number = 0;
+    const WrongStack: number = 1;
+
+    let _isAvailable = false;
+    let _handleType: number;
+    let _handleParameter: number;
+    let _receivedIndex = 0;
+    let _isSending = false;
+    let _handleCommand: number;
     let _timeOutTimer: number;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    const _received: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     /* --------------------------------------------------------------------- */
 
@@ -1561,33 +1587,6 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
-    const DFPlayerCardInserted: number = 2;
-    const DFPlayerCardRemoved: number = 3;
-    const DFPlayerCardOnline: number = 4;
-    const DFPlayerPlayFinished: number = 5;
-    const DFPlayerError: number = 6;
-    const DFPlayerUSBInserted: number = 7;
-    const DFPlayerUSBRemoved: number = 8;
-    const DFPlayerUSBOnline: number = 9;
-    const DFPlayerCardUSBOnline: number = 10;
-    const DFPlayerFeedBack: number = 11;
-
-    const Stack_Version: number = 1;
-    const Stack_Length: number = 2;
-    const Stack_End: number = 9;
-
-    const TimeOut: number = 0;
-    const WrongStack: number = 1;
-
-    let _isAvailable = false;
-    let _handleType: number;
-    let _handleParameter: number;
-    let _receivedIndex = 0;
-    let _isSending = false;
-    let _handleCommand: number;
-
-    const _received: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
     export function handleMessage(type: number, parameter: number): boolean {
         _receivedIndex = 0;
         _handleType = type;
@@ -1613,7 +1612,11 @@ namespace mp3Player {
 
     export function parseStack() {
         let handleCommand = _received[3];
-        if (handleCommand == 0x41) { //handle the 0x41 ack feedback as a spcecial case, in case the pollusion of _handleCommand, _handleParameter, and _handleType.
+        /**
+         * Handle the 0x41 ack feedback as a spcecial case
+         * In case the pollusion of _handleCommand, _handleParameter, and _handleType
+         */
+        if (handleCommand == 0x41) {
             _isSending = false;
             return;
         }
@@ -1722,8 +1725,9 @@ namespace mp3Player {
             data = serial.readBuffer(1);
         }
 
+        /* Over timeout 500ms */
         if (_isSending && (input.runningTime() - _timeOutTimer >= 500)) {
-            return handleError(TimeOut, 0);    // Over timeout 500ms
+            return handleError(TimeOut, 0);
         }
 
         return _isAvailable;
@@ -1732,8 +1736,9 @@ namespace mp3Player {
     export function waitAvailable(): boolean {
         let wait = input.runningTime();
         while (!available()) {
+            /* Over timeout 500ms */
             if (input.runningTime() - wait > 500) {
-                return false;   // Over timeout 500ms
+                return false;
             }
         }
         return true;
@@ -1824,33 +1829,24 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
-    // void waitFinishMusic()
-    // {
-    //     byte count = 0;
-    //     bool wrongStack = false;
-    //     bool timeOut = false;
-    //     while (1)
-    //     {
-    //         if (myDFPlayer.available())
-    //         {
-    //         if (myDFPlayer.readType() == DFPlayerPlayFinished)
-    //         {
-    //             count++;
-    //             if (count == 2) {break;}
-    //         }
-    //         else
-    //         {
-    //             if (myDFPlayer.readType() == WrongStack) {wrongStack = true;}
-    //             else if (myDFPlayer.readType() == TimeOut) {timeOut = true;}
-    //             //
-    //             if (wrongStack && timeOut) {break;}
-    //         }
-    //         }
-    //     }
-    // }
-
     export function waitFinishMusic() {
-        //
+        let count = 0;
+        let wrongStack = false;
+        let timeOut = false;
+
+        while (1) {
+            if (available()) {
+                if (readType() == DFPlayerPlayFinished) {
+                    count++;
+                    if (count == 2) { break; }
+                } else {
+                    if (readType() == WrongStack) { wrongStack = true; }
+                    else if (readType() == TimeOut) { timeOut = true; }
+                    //
+                    if (wrongStack && timeOut) { break; }
+                }
+            }
+        }
     }
 
     /* --------------------------------------------------------------------- */
@@ -2033,52 +2029,6 @@ namespace mp3Player {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ------------------------------------------------------------------------- */
 /*                               MODULE IR1838                               */
 /* ------------------------------------------------------------------------- */
@@ -2092,6 +2042,52 @@ namespace ir1838 {
         //
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ------------------------------------------------------------------------- */
 /*                              MODULE BLUETOOTH                             */
