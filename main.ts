@@ -1472,8 +1472,6 @@ namespace mp3Player {
 
     /* --------------------------------------------------------------------- */
 
-    let _isConnected = false;
-
     /**
      * Serial Mode: Instruction Description
      * 
@@ -1516,7 +1514,7 @@ namespace mp3Player {
     let _receivedIndex = 0;
     let _isSending = false;
     let _handleCommand: number;
-    let _timeOutTimer: number;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    let _timeOutTimer: number;
 
     const _received: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -1534,12 +1532,9 @@ namespace mp3Player {
          * 
          * MP3Player <----> MicroBit
          * RX               P14 (TX)
-         * TX               P13 (RX)
+         * TX               P15 (RX)
          */
-        serial.redirect(SerialPin.P14, SerialPin.P13, BaudRate.BaudRate9600);
-
-        _isConnected = true;
-        basic.pause(100);
+        serial.redirect(SerialPin.P14, SerialPin.P15, BaudRate.BaudRate9600);
     }
 
     /* Calculate Checksum */
@@ -1566,16 +1561,14 @@ namespace mp3Player {
         }
         serial.writeBuffer(buf);
 
-        _timeOutTimer = input.runningTime();//!!!!!!!!!!!!!!!!
-        basic.pause(100);
+        _timeOutTimer = input.runningTime();
+        basic.pause(100);//!
     }
 
     /* Start the process of sending commands via Serial */
     export function innerCall(CMD: number, para1: number, para2: number) {
         /* Make sure MP3Player is connected */
-        if (!_isConnected) {
-            connect();
-        }
+        connect();
 
         dataArr[3] = CMD;
         dataArr[5] = para1;
@@ -1592,12 +1585,14 @@ namespace mp3Player {
         _handleType = type;
         _handleParameter = parameter;
         _isAvailable = true;
+
         return _isAvailable;
     }
 
     export function handleError(type: number, parameter: number): boolean {
         handleMessage(type, parameter);
         _isSending = false;
+
         return false;
     }
 
@@ -1680,16 +1675,16 @@ namespace mp3Player {
     }
 
     export function available(): boolean {
-        let data = serial.readBuffer(1);
-        while (data.length > 0) {
+        let data = serial.readBuffer(0);
+        while (_receivedIndex < data.length) {
             if (_receivedIndex == 0) {
-                _received[0] = data.getNumber(NumberFormat.Int8LE, 0);
+                _received[0] = data.getNumber(NumberFormat.UInt8LE, 0);
                 if (_received[0] == 0x7E) {
                     _receivedIndex++;
                 }
-            }
-            else {
-                _received[_receivedIndex] = data.getNumber(NumberFormat.Int8LE, 0);
+            } else {
+                _received[_receivedIndex] = data.getNumber(NumberFormat.UInt8LE, _receivedIndex);
+
                 switch (_receivedIndex) {
                     case Stack_Version:
                         if (_received[_receivedIndex] != 0xFF) {
@@ -1704,23 +1699,21 @@ namespace mp3Player {
                     case Stack_End:
                         if (_received[_receivedIndex] != 0xEF) {
                             return handleError(WrongStack, 0);
-                        }
-                        else {
+                        } else {
                             if (validateStack()) {
                                 _receivedIndex = 0;
                                 parseStack();
                                 return _isAvailable;
-                            }
-                            else {
+                            } else {
                                 return handleError(WrongStack, 0);
                             }
                         }
                     default:
                         break;
                 }
+
                 _receivedIndex++;
             }
-            data = serial.readBuffer(1);
         }
 
         /* Over timeout 500ms */
@@ -1751,6 +1744,8 @@ namespace mp3Player {
         _isAvailable = false;
         return _handleParameter;
     }
+
+    /* --------------------------------------------------------------------- */
 
     export function readEQ(): number {
         /* Query the current EQ */
@@ -1811,6 +1806,8 @@ namespace mp3Player {
             + "Volume " + convertToText(readVolume()) + ".\n"
             + "EQ " + typeEQ + ".";
 
+        /* Direct the serial input and output to use the USB connection */
+        serial.redirectToUSB();
         return info;
     }
 
@@ -1832,7 +1829,7 @@ namespace mp3Player {
         let wrongStack = false;
         let timeOut = false;
 
-        while (1) {
+        while (true) {
             if (available()) {
                 if (readType() == DFPlayerPlayFinished) {
                     count++;
@@ -1859,6 +1856,8 @@ namespace mp3Player {
     export function upVolume() {
         // DFRobotDFPlayerMini::volumeUp()
         innerCall(0x04, 0x00, 0x00);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1871,6 +1870,8 @@ namespace mp3Player {
     export function downVolume() {
         // DFRobotDFPlayerMini::volumeDown()
         innerCall(0x05, 0x00, 0x00);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1885,6 +1886,8 @@ namespace mp3Player {
     export function setVolume(volume: number) {
         // DFRobotDFPlayerMini::volume(uint8_t volume)
         innerCall(0x06, 0x00, volume);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1899,6 +1902,8 @@ namespace mp3Player {
     export function setEQ(chooseEQ: EQ) {
         // DFRobotDFPlayerMini::EQ(uint8_t eq)
         innerCall(0x07, 0x00, chooseEQ);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1916,6 +1921,8 @@ namespace mp3Player {
          * DFRobotDFPlayerMini::playMp3Folder(int fileNumber)
          */
         innerCall(0x12, file >> 8, file & 0xFF);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1928,7 +1935,13 @@ namespace mp3Player {
     //% weight=8
     //% group="Control"
     export function play(playWhat: PlayWhat) {
+        /**
+         * DFRobotDFPlayerMini::next()
+         * DFRobotDFPlayerMini::previous()
+         */
         innerCall(playWhat, 0x00, 0x00);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1941,6 +1954,8 @@ namespace mp3Player {
     export function pause() {
         // DFRobotDFPlayerMini::pause()
         innerCall(0x0E, 0x00, 0x00);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1953,6 +1968,8 @@ namespace mp3Player {
     export function start() {
         // DFRobotDFPlayerMini::start()
         innerCall(0x0D, 0x00, 0x00);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1980,6 +1997,8 @@ namespace mp3Player {
     export function playFileInTime(file: number, second: number) {
         playFile(file);
         playInPeriod(second);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -1992,8 +2011,14 @@ namespace mp3Player {
     //% weight=3
     //% group="Advanced Control"
     export function playFileUntilDone(file: number) {
-        playFile(file);
+        /**
+         * Play specific mp3 in SD:/MP3/0000.mp3; File Name (0 ~ 65,535)
+         * DFRobotDFPlayerMini::playMp3Folder(int fileNumber)
+         */
+        innerCall(0x12, file >> 8, file & 0xFF);
         waitFinishMusic();
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -2010,6 +2035,8 @@ namespace mp3Player {
     export function playInTime(playWhat: PlayWhat, second: number) {
         play(playWhat);
         playInPeriod(second);
+
+        serial.redirectToUSB();
     }
 
     /**
@@ -2022,8 +2049,14 @@ namespace mp3Player {
     //% weight=1
     //% group="Advanced Control"
     export function playUntilDone(playWhat: PlayWhat) {
-        play(playWhat);
+        /**
+         * DFRobotDFPlayerMini::next()
+         * DFRobotDFPlayerMini::previous()
+         */
+        innerCall(playWhat, 0x00, 0x00);
         waitFinishMusic();
+
+        serial.redirectToUSB();
     }
 }
 
