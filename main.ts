@@ -1825,15 +1825,14 @@ namespace mp3Player {
     /* --------------------------------------------------------------------- */
 
     export function waitFinishMusic() {
-        let count = 0;
         let wrongStack = false;
         let timeOut = false;
 
         while (true) {
+            basic.pause(500);//! Interval is set at 400ms
             if (available()) {
                 if (readType() == DFPlayerPlayFinished) {
-                    count++;
-                    if (count == 2) { break; }
+                    break;
                 } else {
                     if (readType() == WrongStack) { wrongStack = true; }
                     else if (readType() == TimeOut) { timeOut = true; }
