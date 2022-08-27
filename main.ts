@@ -2073,62 +2073,16 @@ namespace ir1838 {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ------------------------------------------------------------------------- */
 /*                              MODULE BLUETOOTH                             */
 /* ------------------------------------------------------------------------- */
 
-//! pxt-bleDabble
+// //! pxt-bleDabble
 
-//% color="#FEBC68" weight=1 icon="\u26a1" block="MKE-M15"
-namespace bleDabble {
-    //% block
-    export function helloWorld() {
-        //
-    }
-}
+// //% color="#FEBC68" weight=1 icon="\u26a1" block="MKE-M15"
+// namespace bleDabble {
+//     //% block
+//     export function helloWorld() {
+//         //
+//     }
+// }
