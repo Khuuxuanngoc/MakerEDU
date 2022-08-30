@@ -1071,7 +1071,7 @@ namespace ds3231 {
     /**
      * Update the time to see if it's time for the alarm
      */
-    //% block="DS3231 \\| Check Alarm"
+    //% block="DS3231 \\| Check Alarm 💤⏰"
     //% inlineInputMode=inline
     //% weight=1
     //% group="Alarm"
@@ -1100,7 +1100,7 @@ namespace ds3231 {
 //! pxt-driver
 
 //% color="#FEBC68" weight=4 icon="\uf018" block="MKE-M10"
-//% groups="['Control Motor DC', 'Control Servo']"
+//% groups="['Control Motor DC', 'Control Servo', 'GO', 'CROSS', 'TURN', 'STOP', 'MEASURE']"
 namespace driver {
     export enum Address {
         //% block="0x40 (64)"
@@ -1434,6 +1434,138 @@ namespace driver {
     //% group="Control Servo"
     export function releaseServo(addr: Address, servo: Servo) {
         controlServo(addr, servo, 3000);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Control car go forward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
+    //% advanced=true
+    //% block="🚗 go forward [🡹] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=10
+    //% group="GO"
+    export function goForward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+    }
+
+    /**
+     * Control car go backward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
+    //% advanced=true
+    //% block="🚗 go backward [🡻] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=9
+    //% group="GO"
+    export function goBackward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+    }
+
+    //% advanced=true
+    //% block="🚗 cross 'left' forward [🡼] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=8
+    //% group="CROSS"
+    export function crossLeftForward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
+        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+    }
+
+    //% advanced=true
+    //% block="🚗 cross 'right' forward [🡽] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=7
+    //% group="CROSS"
+    export function crossRightForward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
+    }
+
+    //% advanced=true
+    //% block="🚗 cross 'left' backward [🡿] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=6
+    //% group="CROSS"
+    export function crossLeftBackward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
+        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+    }
+
+    //% advanced=true
+    //% block="🚗 cross 'right' backward [🡾] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=5
+    //% group="CROSS"
+    export function crossRightBackward(speed: number, addr: Address) {
+        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
+    }
+
+    //% advanced=true
+    //% block="🚗 turn 'left' [🡸] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="TURN"
+    export function turnLeft(speed: number, addr: Address) {
+        /* ↺↺↺ : <== */
+        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+    }
+
+    //% advanced=true
+    //% block="🚗 turn 'right' [🡺] at speed $speed \\| Driver address $addr"
+    //% speed.defl=90 speed.min=1 speed.max=100
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="TURN"
+    export function turnRight(speed: number, addr: Address) {
+        /* ↻↻↻ : ==> */
+        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+    }
+
+    //% advanced=true
+    //% block="🚗 stop now (Brakes) 🛑 \\| Driver address $addr"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="STOP"
+    export function brake(addr: Address) {
+        pauseMotor(addr, Pause.Brake, Motor.MotorB);
+        pauseMotor(addr, Pause.Brake, Motor.MotorA);
+    }
+
+    //% advanced=true
+    //% block="🚗 release (Slip) ⚠️ \\| Driver address $addr"
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="STOP"
+    export function stop(addr: Address) {
+        pauseMotor(addr, Pause.Stop, Motor.MotorB);
+        pauseMotor(addr, Pause.Stop, Motor.MotorA);
     }
 }
 
