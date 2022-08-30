@@ -2065,11 +2065,54 @@ namespace mp3Player {
 
 //! pxt-ir1838
 
-//% color="#FEBC68" weight=2 icon="\u26a1" block="MKE-M14"
+//% color="#FEBC68" weight=2 icon="\uf00d" block="MKE-M14"
+//% groups="['Get Info Infrared (Data)', 'Get Info Infrared (Text)']"
 namespace ir1838 {
-    //% block
-    export function helloWorld() {
-        //
+    export enum ValueIR {
+        //% block="command"
+        Command,
+        //% block="address"
+        Address,
+        //% block="raw data"
+        RawData
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    //! let const
+
+    /* --------------------------------------------------------------------- */
+
+    //! function %shim
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     * @param chooseValue x
+     * @param sig x
+    */
+    //% block="IR1838 \\| Read $chooseValue NEC from pin $sig"
+    //% chooseValue.defl=ValueIR.Command
+    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Get Info Infrared (Data)"
+    export function readValueIR(chooseValue: ValueIR, sig: DigitalPin): number {
+        return 0;
+    }
+
+    /**
+     * !
+     * @param sig x
+    */
+    //% block="IR1838 \\| Print IR NEC result short from pin $sig"
+    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Get Info Infrared (Text)"
+    export function printValueIR(sig: DigitalPin): string {
+        return '';
     }
 }
 
