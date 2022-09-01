@@ -1472,6 +1472,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
     }
 
+    /**
+     * Control car cross 'left' forward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 cross 'left' forward [🡼] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1484,6 +1489,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
     }
 
+    /**
+     * Control car cross 'right' forward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 cross 'right' forward [🡽] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1496,6 +1506,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
     }
 
+    /**
+     * Control car cross 'left' backward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 cross 'left' backward [🡿] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1508,6 +1523,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
     }
 
+    /**
+     * Control car cross 'right' backward
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 cross 'right' backward [🡾] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1520,6 +1540,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
     }
 
+    /**
+     * Control car turn 'left'
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 turn 'left' [🡸] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1533,6 +1558,11 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
     }
 
+    /**
+     * Control car turn 'right'
+     * @param speed set the rotational speed of the motor
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 turn 'right' [🡺] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
@@ -1546,6 +1576,10 @@ namespace driver {
         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
     }
 
+    /**
+     * Control car stop now
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 stop now (Brakes) 🛑 \\| Driver address $addr"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -1557,6 +1591,10 @@ namespace driver {
         pauseMotor(addr, Pause.Brake, Motor.MotorA);
     }
 
+    /**
+     * Stop driving the car
+     * @param addr is I2C address for Driver
+     */
     //% advanced=true
     //% block="🚗 release (Slip) ⚠️ \\| Driver address $addr"
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
@@ -2192,6 +2230,164 @@ namespace mp3Player {
 }
 
 /* ------------------------------------------------------------------------- */
+/*                                 BACKGROUND                                */
+/*        https://github.com/1010Technologies/pxt-makerbit-background        */
+/* ------------------------------------------------------------------------- */
+
+namespace background {
+    export enum Thread {
+        Priority = 0,
+        UserCallback = 1
+    }
+
+    export enum Mode {
+        Repeat,
+        Once
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    class Executor {
+        _newJobs: Job[] = undefined;
+        _jobsToRemove: number[] = undefined;
+        _pause: number = 100;
+        _type: Thread;
+
+        constructor(type: Thread) {
+            this._type = type;
+            this._newJobs = [];
+            this._jobsToRemove = [];
+            control.runInParallel(() => this.loop());
+        }
+
+        push(task: () => void, delay: number, mode: Mode): number {
+            if (delay > 0 && delay < this._pause && mode === Mode.Repeat) {
+                this._pause = Math.floor(delay);
+            }
+            const job = new Job(task, delay, mode);
+            this._newJobs.push(job);
+            return job.id;
+        }
+
+        cancel(jobId: number) {
+            this._jobsToRemove.push(jobId);
+        }
+
+        loop(): void {
+            const _jobs: Job[] = [];
+
+            let previous = control.millis();
+
+            while (true) {
+                const now = control.millis();
+                const delta = now - previous;
+                previous = now;
+
+                // Add new jobs
+                this._newJobs.forEach(function (job: Job, index: number) {
+                    _jobs.push(job);
+                });
+                this._newJobs = [];
+
+                // Cancel jobs
+                this._jobsToRemove.forEach(function (jobId: number, index: number) {
+                    for (let i = _jobs.length - 1; i >= 0; i--) {
+                        const job = _jobs[i];
+                        if (job.id == jobId) {
+                            _jobs.removeAt(i);
+                            break;
+                        }
+                    }
+                });
+                this._jobsToRemove = [];
+
+                // Execute all jobs
+                if (this._type === Thread.Priority) {
+                    // Newest first
+                    for (let i = _jobs.length - 1; i >= 0; i--) {
+                        if (_jobs[i].run(delta)) {
+                            this._jobsToRemove.push(_jobs[i].id);
+                        }
+                    }
+                } else {
+                    // Execute in order of schedule
+                    for (let i = 0; i < _jobs.length; i++) {
+                        if (_jobs[i].run(delta)) {
+                            this._jobsToRemove.push(_jobs[i].id);
+                        }
+                    }
+                }
+
+                basic.pause(this._pause);
+            }
+        }
+    }
+
+    class Job {
+        id: number;
+        func: () => void;
+        delay: number;
+        remaining: number;
+        mode: Mode;
+
+        constructor(func: () => void, delay: number, mode: Mode) {
+            this.id = randint(0, 2147483647);
+            this.func = func;
+            this.delay = delay;
+            this.remaining = delay;
+            this.mode = mode;
+        }
+
+        run(delta: number): boolean {
+            if (delta <= 0) {
+                return false;
+            }
+
+            this.remaining -= delta;
+            if (this.remaining > 0) {
+                return false;
+            }
+
+            switch (this.mode) {
+                case Mode.Once:
+                    this.func();
+                    basic.pause(0);
+                    return true;
+                case Mode.Repeat:
+                    this.func();
+                    this.remaining = this.delay;
+                    basic.pause(0);
+                    return false;
+            }
+        }
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    const queues: Executor[] = [];
+
+    /* --------------------------------------------------------------------- */
+
+    export function schedule(func: () => void, type: Thread, mode: Mode, delay: number): number {
+        if (!func || delay < 0) {
+            return 0;
+        }
+
+        if (!queues[type]) {
+            queues[type] = new Executor(type);
+        }
+
+        return queues[type].push(func, delay, mode);
+    }
+
+    export function remove(type: Thread, jobId: number): void {
+        if (queues[type]) {
+            queues[type].cancel(jobId);
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
 /*                               MODULE IR1838                               */
 /* ------------------------------------------------------------------------- */
 
@@ -2209,21 +2405,269 @@ namespace ir1838 {
         RawData
     }
 
+    /* https://hshop.vn/products/module-dieu-khien-hong-ngoai-tu-xa */
+    // export enum IrButton {
+    //     Any = -1,
+    //     CH_Minus = 0x45,
+    //     CH = 0x46,
+    //     CH_Plus = 0x47,
+    //     Prev = 0x44,
+    //     Next = 0x40,
+    //     Play_Pause = 0x43,
+    //     Vol_Minus = 0x07,
+    //     Vol_Plus = 0x15,
+    //     EQ = 0x09,
+    //     Number_0 = 0x16,
+    //     Number_100Plus = 0x19,
+    //     Number_200Plus = 0x0D,
+    //     Number_1 = 0x0C,
+    //     Number_2 = 0x18,
+    //     Number_3 = 0x5E,
+    //     Number_4 = 0x08,
+    //     Number_5 = 0x1C,
+    //     Number_6 = 0x5A,
+    //     Number_7 = 0x42,
+    //     Number_8 = 0x52,
+    //     Number_9 = 0x4A
+    // }
+
     /* --------------------------------------------------------------------- */
 
-    //! let const
+    const IR_REPEAT = 256;      // Status code indicating "Repeat Code" received
+    const IR_INCOMPLETE = 257;  // Status code indicating receipt of 1 signal pulse [ mark + space ]
+    const IR_DATAGRAM = 258;    // Status code indicating full 32 bits of data received
+
+    const REPEAT_TIMEOUT_MS = 120;  // Repeat cycle is 110ms
+
+    // class IrButtonHandler {
+    //     irButton: IrButton;
+    //     onEvent: () => void;
+
+    //     constructor(irButton: IrButton, onEvent: () => void) {
+    //         this.irButton = irButton;
+    //         this.onEvent = onEvent;
+    //     }
+    // }
+    interface IrState {
+        hasNewDatagram: boolean;    // Is there any new data sent?
+
+        bitsReceived: number;       // Number of bits received
+
+        hiword: number;             // Temporarily save the raw "Command" value
+        loword: number;             // Temporarily save the raw "Address" value
+
+        commandSectionBits: number; // Save the complete "Command" data
+        addressSectionBits: number; // Save the complete "Address" data
+
+        repeatTimeout: number;      // Store time for "Repeat timer refresh"
+    }
+
+    let irState: IrState;
+
+    let _initOneTime = false;
 
     /* --------------------------------------------------------------------- */
 
-    //! function %shim
+    export function initIrState() {
+        if (irState) {
+            return;
+        }
+
+        irState = {
+            hasNewDatagram: false,
+
+            bitsReceived: 0,
+
+            hiword: 0,
+            loword: 0,
+
+            commandSectionBits: 0,
+            addressSectionBits: 0,
+
+            repeatTimeout: 0
+        };
+    }
+
+    export function appendBitToDatagram(bit: boolean): number {
+        /**
+         * Because these signals are Logic 0 and 1
+         * So every time received, need +1 to count the number of received data bits
+         */
+        irState.bitsReceived += 1;
+
+        /**
+         * Vd: Number_9 = 0x4A
+         * 
+         * |       hiword        |         loword      |
+         * |         |           |           |         |         
+         * | ~Command|   Command |  ~Address | Address |
+         * |         |           |           |         |
+         * |  0xB5   |    0x4A   |    0xFF   |    0x00 |
+         * |         |           |           |         |
+         * 1011.0101 + 0100.1010 | 1111.1111 + 0000.0000
+         * |                                           |
+         * MSB                                         LSB
+         */
+        if (irState.bitsReceived <= 16) {
+            irState.loword >> 1;
+            (bit) ? (irState.loword |= 0x8000) : (irState.loword |= 0);
+        } else if (irState.bitsReceived <= 32) {
+            irState.hiword >> 1;
+            (bit) ? (irState.hiword |= 0x8000) : (irState.hiword |= 0);
+        }
+
+        /**
+         * When full 32 bits are received
+         * Move clipboard data to main memory
+         * Before transferring there is an extra "filtering" to ensure that the full 32 bits are received
+         */
+        if (irState.bitsReceived === 32) {
+            irState.commandSectionBits = irState.hiword & 0xFFFF;
+            irState.addressSectionBits = irState.loword & 0xFFFF;
+            // irState.hiword = 0;//!TEST
+            // irState.loword = 0;//!TEST
+            return IR_DATAGRAM;
+        } else {
+            return IR_INCOMPLETE;
+        }
+    }
+
+    export function decode(markAndSpace: number): number {
+        if (markAndSpace < 1600) {
+            /**
+             * Logic 0: [mark]  = 562.5us
+             *          [space] = 562.5us
+             * markAndSpace     ~ 1.125ms
+             */
+            return appendBitToDatagram(false);
+        } else if (markAndSpace < 2700) {
+            /**
+             * Logic 1: [mark]  = 562.5us
+             *          [space] = 1,687.5us
+             * markAndSpace     ~ 2.25ms
+             */
+            return appendBitToDatagram(true);
+        }
+
+        /**
+         * Because these signals are not Logic 0 and 1
+         * So we "Reset" the number of received data bits to 0
+         */
+        irState.bitsReceived = 0;
+
+        if (markAndSpace < 12500) {
+            /**
+             * ! Repeat detected
+             * 
+             * Repeat Code: [mark]  = 9,000us
+             *              [space] = 2,250us
+             * markAndSpace         ~ 11.25ms
+             */
+            return IR_REPEAT;
+        } else if (markAndSpace < 14500) {
+            /**
+             * ! Start detected
+             * 
+             * Start of Frame:  [mark]  = 9,000us
+             *                  [space] = 4,500us
+             * markAndSpace             ~ 13.5ms
+             */
+            return IR_INCOMPLETE;
+        } else {
+            return IR_INCOMPLETE;
+        }
+    }
+
+    export function handleIrEvent(irEvent: number) {
+        /* Refresh repeat timer */
+        if (irEvent === IR_DATAGRAM || irEvent === IR_REPEAT) {
+            irState.repeatTimeout = input.runningTime() + REPEAT_TIMEOUT_MS;
+        }
+
+        /* Processing when full 32 bits are received */
+        if (irEvent === IR_DATAGRAM) {
+            irState.hasNewDatagram = true;
+        }
+    }
+
+    export function enableIrMarkSpaceDetection(pin: DigitalPin) {
+        pins.setPull(pin, PinPullMode.PullNone);
+
+        let mark = 0;
+        let space = 0;
+
+        /**
+         * Indicates the duration of time when this pin is LOW
+         * 
+         * That is, the time (us) is calculated from the time this pin starts LOW [Edge down]
+         * Until this pin level HIGH [Edge up]
+         * 
+         * Then store in [mark] (burst)
+         */
+        pins.onPulsed(pin, PulseValue.Low, () => {
+            mark = pins.pulseDuration();
+        });
+
+        /**
+         * Indicates the duration of time when this pin is HIGH
+         * 
+         * That is, the time (us) is calculated from the time this pin starts HIGH [Edge up]
+         * Until this pin level LOW [Edge down]
+         * 
+         * Then store in [space]
+         */
+        pins.onPulsed(pin, PulseValue.High, () => {
+            space = pins.pulseDuration();
+        });
+
+        const status = decode(mark + space);
+
+        /**
+         * Process when one of the following status signals is received:
+         * [IR_REPEAT] or [IR_DATAGRAM]
+         */
+        if (status !== IR_INCOMPLETE) {
+            handleIrEvent(status);
+        }
+    }
+
+    export function notifyIrEvents() {
+        const now = input.runningTime();
+        /* Repeat timed out */
+        if (now > irState.repeatTimeout) {
+            irState.bitsReceived = 0;
+        }
+    }
+
+    export function connectIrReceiver(pin: DigitalPin) {
+        initIrState();
+        enableIrMarkSpaceDetection(pin);
+        background.schedule(notifyIrEvents, background.Thread.Priority, background.Mode.Repeat, REPEAT_TIMEOUT_MS);
+    }
+
+    export function ir_rec_to16BitHex(value: number): string {
+        let hex = "";
+
+        for (let pos = 0; pos < 4; pos++) {
+            let remainder = value % 16;
+            if (remainder < 10) {
+                hex = remainder.toString() + hex;
+            } else {
+                hex = String.fromCharCode(55 + remainder) + hex;
+            }
+            value = Math.idiv(value, 16);
+        }
+
+        return hex;
+    }
 
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
-     * @param chooseValue x
-     * @param sig x
-    */
+     * Read received IR signal value, NEC standard
+     * @param chooseValue select the type of value IR you want to read
+     * @param sig signal pin
+     */
     //% block="IR1838 \\| Read $chooseValue NEC from pin $sig"
     //% chooseValue.defl=ValueIR.Command
     //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
@@ -2231,20 +2675,67 @@ namespace ir1838 {
     //% weight=2
     //% group="Get Info Infrared (Data)"
     export function readValueIR(chooseValue: ValueIR, sig: DigitalPin): number {
-        return 0;
+        /* Make sure to initialize IR at first use */
+        if (!_initOneTime) {
+            connectIrReceiver(sig);
+            _initOneTime = true;
+        }
+
+        /* Yield to support background processing when called in tight loops */
+        basic.pause(0);
+        initIrState();
+        if (irState.hasNewDatagram) {
+            irState.hasNewDatagram = false;
+            /* ------------------------------------------------------------- */
+            basic.pause(0);//! Yield
+            if (!irState) {
+                // return IrButton.Any;
+                return -1;
+            }
+            switch (chooseValue) {
+                case ValueIR.Command: return irState.commandSectionBits & 0xFF;
+                case ValueIR.Address: return irState.addressSectionBits & 0xFF;
+                case ValueIR.RawData: return irState.commandSectionBits * 65536 + irState.addressSectionBits;
+            }
+        } else {
+            return 0;
+        }
     }
 
     /**
-     * !
-     * @param sig x
-    */
+     * Print all information about the received IR signal, NEC standard
+     * @param sig signal pin
+     */
     //% block="IR1838 \\| Print IR NEC result short from pin $sig"
     //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
     //% inlineInputMode=inline
     //% weight=1
     //% group="Get Info Infrared (Text)"
     export function printValueIR(sig: DigitalPin): string {
-        return '';
+        /* Make sure to initialize IR at first use */
+        if (!_initOneTime) {
+            connectIrReceiver(sig);
+            _initOneTime = true;
+        }
+
+        /* Yield to support background processing when called in tight loops */
+        basic.pause(0);
+        initIrState();
+        if (irState.hasNewDatagram) {
+            irState.hasNewDatagram = false;
+            /* ------------------------------------------------------------- */
+            basic.pause(0);//! Yield
+            initIrState();
+            let A = ir_rec_to16BitHex(irState.addressSectionBits);
+            let C = ir_rec_to16BitHex(irState.commandSectionBits);
+            return (
+                "A: 0x" + A.substr(2, 2) + "\n" +
+                "C: 0x" + C.substr(2, 2) + "\n" +
+                "D: 0x" + C + A
+            );
+        } else {
+            return "NONE";
+        }
     }
 }
 
