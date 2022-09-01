@@ -2406,30 +2406,30 @@ namespace ir1838 {
     }
 
     /* https://hshop.vn/products/module-dieu-khien-hong-ngoai-tu-xa */
-    // export enum IrButton {
-    //     Any = -1,
-    //     CH_Minus = 0x45,
-    //     CH = 0x46,
-    //     CH_Plus = 0x47,
-    //     Prev = 0x44,
-    //     Next = 0x40,
-    //     Play_Pause = 0x43,
-    //     Vol_Minus = 0x07,
-    //     Vol_Plus = 0x15,
-    //     EQ = 0x09,
-    //     Number_0 = 0x16,
-    //     Number_100Plus = 0x19,
-    //     Number_200Plus = 0x0D,
-    //     Number_1 = 0x0C,
-    //     Number_2 = 0x18,
-    //     Number_3 = 0x5E,
-    //     Number_4 = 0x08,
-    //     Number_5 = 0x1C,
-    //     Number_6 = 0x5A,
-    //     Number_7 = 0x42,
-    //     Number_8 = 0x52,
-    //     Number_9 = 0x4A
-    // }
+    export enum IrButton {
+        Any = -1,
+        CH_Minus = 0x45,
+        CH = 0x46,
+        CH_Plus = 0x47,
+        Prev = 0x44,
+        Next = 0x40,
+        Play_Pause = 0x43,
+        Vol_Minus = 0x07,
+        Vol_Plus = 0x15,
+        EQ = 0x09,
+        Number_0 = 0x16,
+        Number_100Plus = 0x19,
+        Number_200Plus = 0x0D,
+        Number_1 = 0x0C,
+        Number_2 = 0x18,
+        Number_3 = 0x5E,
+        Number_4 = 0x08,
+        Number_5 = 0x1C,
+        Number_6 = 0x5A,
+        Number_7 = 0x42,
+        Number_8 = 0x52,
+        Number_9 = 0x4A
+    }
 
     /* --------------------------------------------------------------------- */
 
@@ -2439,15 +2439,16 @@ namespace ir1838 {
 
     const REPEAT_TIMEOUT_MS = 120;  // Repeat cycle is 110ms
 
-    // class IrButtonHandler {
-    //     irButton: IrButton;
-    //     onEvent: () => void;
+    class IrButtonHandler {
+        irButton: IrButton;
+        onEvent: () => void;
 
-    //     constructor(irButton: IrButton, onEvent: () => void) {
-    //         this.irButton = irButton;
-    //         this.onEvent = onEvent;
-    //     }
-    // }
+        constructor(irButton: IrButton, onEvent: () => void) {
+            this.irButton = irButton;
+            this.onEvent = onEvent;
+        }
+    }
+
     interface IrState {
         hasNewDatagram: boolean;    // Is there any new data sent?
 
@@ -2459,7 +2460,13 @@ namespace ir1838 {
         commandSectionBits: number; // Save the complete "Command" data
         addressSectionBits: number; // Save the complete "Address" data
 
+        activeCommand: number;      // !
         repeatTimeout: number;      // Store time for "Repeat timer refresh"
+
+        onIrButtonPressed: IrButtonHandler[];   // !
+        onIrButtonReleased: IrButtonHandler[];  // !
+
+        onIrDatagram: () => void;   // !
     }
 
     let irState: IrState;
@@ -2484,7 +2491,13 @@ namespace ir1838 {
             commandSectionBits: 0,
             addressSectionBits: 0,
 
-            repeatTimeout: 0
+            activeCommand: -1,
+            repeatTimeout: 0,
+
+            onIrButtonPressed: [],
+            onIrButtonReleased: [],
+
+            onIrDatagram: undefined
         };
     }
 
@@ -2509,11 +2522,17 @@ namespace ir1838 {
          * MSB                                         LSB
          */
         if (irState.bitsReceived <= 16) {
-            irState.loword >> 1;
-            (bit) ? (irState.loword |= 0x8000) : (irState.loword |= 0);
+            if (bit) {
+                irState.loword = (irState.loword >>> 1) | 0x8000;
+            } else {
+                irState.loword = irState.loword >>> 1;
+            }
         } else if (irState.bitsReceived <= 32) {
-            irState.hiword >> 1;
-            (bit) ? (irState.hiword |= 0x8000) : (irState.hiword |= 0);
+            if (bit) {
+                irState.hiword = (irState.hiword >>> 1) | 0x8000;
+            } else {
+                irState.hiword = irState.hiword >>> 1;
+            }
         }
 
         /**
@@ -2524,8 +2543,11 @@ namespace ir1838 {
         if (irState.bitsReceived === 32) {
             irState.commandSectionBits = irState.hiword & 0xFFFF;
             irState.addressSectionBits = irState.loword & 0xFFFF;
-            // irState.hiword = 0;//!TEST
-            // irState.loword = 0;//!TEST
+
+            //! Use for Debug
+            // serial.writeNumber(irState.commandSectionBits); serial.writeLine(" [C]");
+            // serial.writeNumber(irState.addressSectionBits); serial.writeLine(" [A]");
+
             return IR_DATAGRAM;
         } else {
             return IR_INCOMPLETE;
@@ -2587,6 +2609,30 @@ namespace ir1838 {
         /* Processing when full 32 bits are received */
         if (irEvent === IR_DATAGRAM) {
             irState.hasNewDatagram = true;
+
+            if (irState.onIrDatagram) {
+                background.schedule(irState.onIrDatagram, background.Thread.UserCallback, background.Mode.Once, 0);
+            }
+
+            const newCommand = irState.commandSectionBits & 0xFF;
+
+            /* Process a new command */
+            if (newCommand !== irState.activeCommand) {
+
+                if (irState.activeCommand >= 0) {
+                    const releasedHandler = irState.onIrButtonReleased.find(h => h.irButton === irState.activeCommand || IrButton.Any === h.irButton);
+                    if (releasedHandler) {
+                        background.schedule(releasedHandler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
+                    }
+                }
+
+                const pressedHandler = irState.onIrButtonPressed.find(h => h.irButton === newCommand || IrButton.Any === h.irButton);
+                if (pressedHandler) {
+                    background.schedule(pressedHandler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
+                }
+
+                irState.activeCommand = newCommand;
+            }
         }
     }
 
@@ -2618,24 +2664,36 @@ namespace ir1838 {
          */
         pins.onPulsed(pin, PulseValue.High, () => {
             space = pins.pulseDuration();
+
+            const status = decode(mark + space);
+
+            /**
+             * Process when one of the following status signals is received:
+             * [IR_REPEAT] or [IR_DATAGRAM]
+             */
+            if (status !== IR_INCOMPLETE) {
+                handleIrEvent(status);
+            }
         });
-
-        const status = decode(mark + space);
-
-        /**
-         * Process when one of the following status signals is received:
-         * [IR_REPEAT] or [IR_DATAGRAM]
-         */
-        if (status !== IR_INCOMPLETE) {
-            handleIrEvent(status);
-        }
     }
 
     export function notifyIrEvents() {
-        const now = input.runningTime();
-        /* Repeat timed out */
-        if (now > irState.repeatTimeout) {
-            irState.bitsReceived = 0;
+        /* Skip to save CPU cylces */
+        if (irState.activeCommand === -1) {
+        } else {
+            const now = input.runningTime();
+
+            /* Repeat timed out */
+            if (now > irState.repeatTimeout) {
+
+                const handler = irState.onIrButtonReleased.find(h => h.irButton === irState.activeCommand || IrButton.Any === h.irButton);
+                if (handler) {
+                    background.schedule(handler.onEvent, background.Thread.UserCallback, background.Mode.Once, 0);
+                }
+
+                irState.bitsReceived = 0;
+                irState.activeCommand = -1;
+            }
         }
     }
 
@@ -2689,13 +2747,13 @@ namespace ir1838 {
             /* ------------------------------------------------------------- */
             basic.pause(0);//! Yield
             if (!irState) {
-                // return IrButton.Any;
-                return -1;
+                return IrButton.Any;
             }
             switch (chooseValue) {
                 case ValueIR.Command: return irState.commandSectionBits & 0xFF;
                 case ValueIR.Address: return irState.addressSectionBits & 0xFF;
                 case ValueIR.RawData: return irState.commandSectionBits * 65536 + irState.addressSectionBits;
+                default: return 0;
             }
         } else {
             return 0;
