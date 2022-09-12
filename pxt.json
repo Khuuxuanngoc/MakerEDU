@@ -19,7 +19,7 @@
         "targetId": "microbit"
     },
     "searchOnly": true,
-    "icon": "https://github.com/TrungKuro/MakerEDU/blob/master/img/MakerEdu-Robotics.jpg",
+    "icon": "https://github.com/TrungKuro/MakerEDU/blob/master/img/MakerEdu%20Robotics.jpg",
     "supportedTargets": [
         "microbit"
     ],
