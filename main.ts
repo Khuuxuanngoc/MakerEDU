@@ -2433,11 +2433,11 @@ namespace ir1838 {
 
     /* --------------------------------------------------------------------- */
 
-    const IR_REPEAT = 256;      // Status code indicating "Repeat Code" received
-    const IR_INCOMPLETE = 257;  // Status code indicating receipt of 1 signal pulse [ mark + space ]
-    const IR_DATAGRAM = 258;    // Status code indicating full 32 bits of data received
+    const IR_REPEAT = 256;          // Status code indicating "Repeat Code" received
+    const IR_INCOMPLETE = 257;      // Status code indicating receipt of 1 signal pulse [ mark + space ]
+    const IR_DATAGRAM = 258;        // Status code indicating full 32 bits of data received
 
-    const REPEAT_TIMEOUT_MS = 120;  // Repeat cycle is 110ms
+    const REPEAT_TIMEOUT_MS = 120;  // Repeat cycle is >= 110ms
 
     class IrButtonHandler {
         irButton: IrButton;
