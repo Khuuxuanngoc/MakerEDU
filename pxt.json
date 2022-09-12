@@ -2,10 +2,7 @@
     "name": "MakerEDU",
     "description": "",
     "dependencies": {
-        "core": "*",
-        "microphone": "*",
-        "bluetooth": "*",
-        "devices": "*"
+        "core": "*"
     },
     "files": [
         "main.ts",
@@ -23,7 +20,7 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "blocksprj",
+    "preferredEditor": "tsprj",
     "yotta": {
         "config": {
             "microbit-dal": {
