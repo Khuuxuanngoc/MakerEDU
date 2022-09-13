@@ -2856,8 +2856,8 @@ namespace bleDabble {
         });
 
         //! Use for Debug
-        serial.writeLine(String(e));
-        serial.writeLine(String(status));
+        serial.writeLine(e.toString());
+        serial.writeLine(status.toString());
         serial.writeLine("---");
 
         return status;
@@ -2887,8 +2887,8 @@ namespace bleDabble {
         });
 
         //! Use for Debug
-        serial.writeLine(String(e));
-        serial.writeLine(String(status));
+        serial.writeLine(e.toString());
+        serial.writeLine(status.toString());
         serial.writeLine("---");
 
         return status;
