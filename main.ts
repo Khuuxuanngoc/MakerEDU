@@ -2808,25 +2808,27 @@ namespace ir1838 {
 namespace bleDabble {
     export enum AlphabetButton {
         //% block="A"
-        btnA,
+        btnA = 1,
         //% block="B"
-        btnB,
+        btnB = 3,
         //% block="C"
-        btnC,
+        btnC = 5,
         //% block="D"
-        btnD
+        btnD = 7
     }
 
     export enum NumberButton {
         //% block="1"
-        btn1,
+        btn1 = 9,
         //% block="2"
-        btn2,
+        btn2 = 11,
         //% block="3"
-        btn3,
+        btn3 = 13,
         //% block="4"
-        btn4
+        btn4 = 14
     }
+
+    /* --------------------------------------------------------------------- */
 
     /* --------------------------------------------------------------------- */
 
@@ -2840,21 +2842,8 @@ namespace bleDabble {
     //% weight=2
     //% group="Gamepad (Alphabet Keys)"
     export function alphabetGamepad(btn: AlphabetButton): boolean {
-        let status = false;
-        switch (btn) {
-            case AlphabetButton.btnA:
-                status = devices.onGamepadButton(MesDpadButtonInfo.ADown, function () { return true; });
-                return status;
-            case AlphabetButton.btnB:
-                status = devices.onGamepadButton(MesDpadButtonInfo.BDown, function () { return true; });
-                return status;
-            case AlphabetButton.btnC:
-                status = devices.onGamepadButton(MesDpadButtonInfo.CDown, function () { return true; });
-                return status;
-            case AlphabetButton.btnD:
-                status = devices.onGamepadButton(MesDpadButtonInfo.DDown, function () { return true; });
-                return status;
-        }
+        devices.onGamepadButton(btn, function () { return true; });
+        return false;
     }
 
     /**
@@ -2867,20 +2856,7 @@ namespace bleDabble {
     //% weight=1
     //% group="Gamepad (Number Keys)"
     export function numberGamepad(btn: NumberButton): boolean {
-        let status = false;
-        switch (btn) {
-            case NumberButton.btn1:
-                status = devices.onGamepadButton(MesDpadButtonInfo._1Down, function () { return true; });
-                return status;
-            case NumberButton.btn2:
-                status = devices.onGamepadButton(MesDpadButtonInfo._2Down, function () { return true; });
-                return status;
-            case NumberButton.btn3:
-                status = devices.onGamepadButton(MesDpadButtonInfo._3Down, function () { return true; });
-                return status;
-            case NumberButton.btn4:
-                status = devices.onGamepadButton(MesDpadButtonInfo._4Down, function () { return true; });
-                return status;
-        }
+        devices.onGamepadButton(btn, function () { return true; });
+        return false;
     }
 }
