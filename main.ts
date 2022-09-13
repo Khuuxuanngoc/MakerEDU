@@ -2801,12 +2801,108 @@ namespace ir1838 {
 /*                              MODULE BLUETOOTH                             */
 /* ------------------------------------------------------------------------- */
 
-// //! pxt-bleDabble
+//! pxt-bleDabble
 
-// //% color="#FEBC68" weight=1 icon="\u26a1" block="MKE-M15"
-// namespace bleDabble {
-//     //% block
-//     export function helloWorld() {
-//         //
-//     }
-// }
+//% color="#FEBC68" weight=1 icon="\uf294" block="MKE-M15"
+//% groups="['Gamepad', 'Buttons A and B']"
+namespace bleDabble {
+    export enum AlphabetButton {
+        //% block="A"
+        btnA,
+        //% block="B"
+        btnB,
+        //% block="C"
+        btnC,
+        //% block="D"
+        btnD
+    }
+
+    export enum NumberButton {
+        //% block="1"
+        btn1,
+        //% block="2"
+        btn2,
+        //% block="3"
+        btn3,
+        //% block="4"
+        btn4
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * !
+     * @param btn x
+     */
+    //% block="Is $btn pressed on GamePad?"
+    //% btn.defl=AlphabetButton.btnA
+    //% inlineInputMode=inline
+    //% weight=4
+    //% group="Gamepad"
+    export function alphabetGamepad(btn: AlphabetButton): boolean {
+        switch (btn) {
+            case AlphabetButton.btnA:
+                devices.onGamepadButton(MesDpadButtonInfo.ADown, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo.AUp, function () { return false; });
+            case AlphabetButton.btnB:
+                devices.onGamepadButton(MesDpadButtonInfo.BDown, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo.BUp, function () { return false; });
+            case AlphabetButton.btnC:
+                devices.onGamepadButton(MesDpadButtonInfo.CDown, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo.CUp, function () { return false; });
+            case AlphabetButton.btnD:
+                devices.onGamepadButton(MesDpadButtonInfo.DDown, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo.DUp, function () { return false; });
+        }
+    }
+
+    /**
+     * !
+     * @param btn x
+     */
+    //% block="Is $btn pressed on GamePad?"
+    //% btn.defl=NumberButton.btn1
+    //% inlineInputMode=inline
+    //% weight=3
+    //% group="Gamepad"
+    export function numberGamepad(btn: NumberButton): boolean {
+        switch (btn) {
+            case NumberButton.btn1:
+                devices.onGamepadButton(MesDpadButtonInfo._1Down, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo._1Up, function () { return false; });
+            case NumberButton.btn2:
+                devices.onGamepadButton(MesDpadButtonInfo._2Down, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo._2Up, function () { return false; });
+            case NumberButton.btn3:
+                devices.onGamepadButton(MesDpadButtonInfo._3Down, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo._3Up, function () { return false; });
+            case NumberButton.btn4:
+                devices.onGamepadButton(MesDpadButtonInfo._4Down, function () { return true; });
+                devices.onGamepadButton(MesDpadButtonInfo._4Up, function () { return false; });
+        }
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    // /**
+    //  * !
+    //  */
+    // //% block="Is button A pressed?"
+    // //% inlineInputMode=inline
+    // //% weight=2
+    // //% group="Buttons A and B"
+    // export function buttonA(): boolean {
+    //     //
+    // }
+
+    // /**
+    //  * !
+    //  */
+    // //% block="Is button B pressed?"
+    // //% inlineInputMode=inline
+    // //% weight=1
+    // //% group="Buttons A and B"
+    // export function buttonB(): boolean {
+    //     //
+    // }
+}
