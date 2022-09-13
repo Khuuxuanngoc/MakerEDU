@@ -2840,20 +2840,25 @@ namespace bleDabble {
     //% weight=4
     //% group="Gamepad"
     export function alphabetGamepad(btn: AlphabetButton): boolean {
+        let status = false;
         switch (btn) {
             case AlphabetButton.btnA:
-                devices.onGamepadButton(MesDpadButtonInfo.ADown, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo.AUp, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo.ADown, function () { status = true; });
+                break;
             case AlphabetButton.btnB:
-                devices.onGamepadButton(MesDpadButtonInfo.BDown, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo.BUp, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo.BDown, function () { status = true; });
+                break;
             case AlphabetButton.btnC:
-                devices.onGamepadButton(MesDpadButtonInfo.CDown, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo.CUp, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo.CDown, function () { status = true; });
+                break;
             case AlphabetButton.btnD:
-                devices.onGamepadButton(MesDpadButtonInfo.DDown, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo.DUp, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo.DDown, function () { status = true; });
+                break;
         }
+        if (status)
+            return true;
+        else
+            return false;
     }
 
     /**
@@ -2866,43 +2871,48 @@ namespace bleDabble {
     //% weight=3
     //% group="Gamepad"
     export function numberGamepad(btn: NumberButton): boolean {
+        let status = false;
         switch (btn) {
             case NumberButton.btn1:
-                devices.onGamepadButton(MesDpadButtonInfo._1Down, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo._1Up, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo._1Down, function () { status = true; });
+                break;
             case NumberButton.btn2:
-                devices.onGamepadButton(MesDpadButtonInfo._2Down, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo._2Up, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo._2Down, function () { status = true; });
+                break;
             case NumberButton.btn3:
-                devices.onGamepadButton(MesDpadButtonInfo._3Down, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo._3Up, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo._3Down, function () { status = true; });
+                break;
             case NumberButton.btn4:
-                devices.onGamepadButton(MesDpadButtonInfo._4Down, function () { return true; });
-                devices.onGamepadButton(MesDpadButtonInfo._4Up, function () { return false; });
+                devices.onGamepadButton(MesDpadButtonInfo._4Down, function () { status = true; });
+                break;
         }
+        if (status)
+            return true;
+        else
+            return false;
     }
 
     /* --------------------------------------------------------------------- */
 
-    // /**
-    //  * !
-    //  */
-    // //% block="Is button A pressed?"
-    // //% inlineInputMode=inline
-    // //% weight=2
-    // //% group="Buttons A and B"
-    // export function buttonA(): boolean {
-    //     //
-    // }
+    /**
+     * !
+     */
+    //% block="Is button A pressed?"
+    //% inlineInputMode=inline
+    //% weight=2
+    //% group="Buttons A and B"
+    export function buttonA(): boolean {
+        //
+    }
 
-    // /**
-    //  * !
-    //  */
-    // //% block="Is button B pressed?"
-    // //% inlineInputMode=inline
-    // //% weight=1
-    // //% group="Buttons A and B"
-    // export function buttonB(): boolean {
-    //     //
-    // }
+    /**
+     * !
+     */
+    //% block="Is button B pressed?"
+    //% inlineInputMode=inline
+    //% weight=1
+    //% group="Buttons A and B"
+    export function buttonB(): boolean {
+        //
+    }
 }
