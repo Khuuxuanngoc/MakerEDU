@@ -2808,24 +2808,24 @@ namespace ir1838 {
 namespace bleDabble {
     export enum AlphabetButton {
         //% block="A"
-        btnA = 1,
+        btnA = MesDpadButtonInfo.ADown,
         //% block="B"
-        btnB = 3,
+        btnB = MesDpadButtonInfo.BDown,
         //% block="C"
-        btnC = 5,
+        btnC = MesDpadButtonInfo.CDown,
         //% block="D"
-        btnD = 7
+        btnD = MesDpadButtonInfo.DDown
     }
 
     export enum NumberButton {
         //% block="1"
-        btn1 = 9,
+        btn1 = MesDpadButtonInfo._1Down,
         //% block="2"
-        btn2 = 11,
+        btn2 = MesDpadButtonInfo._2Down,
         //% block="3"
-        btn3 = 13,
+        btn3 = MesDpadButtonInfo._3Down,
         //% block="4"
-        btn4 = 14
+        btn4 = MesDpadButtonInfo._4Down
     }
 
     /* --------------------------------------------------------------------- */
