@@ -2,7 +2,10 @@
     "name": "MakerEDU",
     "description": "",
     "dependencies": {
-        "core": "*"
+        "core": "*",
+        "microphone": "*",
+        "bluetooth": "*",
+        "devices": "*"
     },
     "files": [
         "main.ts",
@@ -19,7 +22,7 @@
         "targetId": "microbit"
     },
     "searchOnly": true,
-    "icon": "https://github.com/TrungKuro/MakerEDU/blob/master/img/MakerEdu%20Robotics.jpg",
+    "icon": "https://raw.githubusercontent.com/TrungKuro/MakerEDU/master/img/MakerEdu%20Robotics.jpg",
     "supportedTargets": [
         "microbit"
     ],
