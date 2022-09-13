@@ -2856,8 +2856,8 @@ namespace bleDabble {
         });
 
         //! Use for Debug
-        serial.writeLine(e);
-        serial.writeLine(status);
+        serial.writeLine("btn: "); serial.writeNumber(e); serial.writeLine("");
+        serial.writeLine("sts: "); serial.writeNumber(status); serial.writeLine("");
 
         return status;
     }
@@ -2879,16 +2879,16 @@ namespace bleDabble {
             case NumberButton.btn3: e = MesDpadButtonInfo._3Down; break;
             case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
         }
-        
+
         let status = false;
         devices.onGamepadButton(e, function () {
             status = true;
         });
 
         //! Use for Debug
-        serial.writeLine(e);
-        serial.writeLine(status);
-        
+        serial.writeLine("btn: "); serial.writeNumber(e); serial.writeLine("");
+        serial.writeLine("sts: "); serial.writeNumber(status); serial.writeLine("");
+
         return status;
     }
 }
