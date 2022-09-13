@@ -2808,24 +2808,24 @@ namespace ir1838 {
 namespace bleDabble {
     export enum AlphabetButton {
         //% block="A"
-        btnA = MesDpadButtonInfo.ADown,
+        btnA,
         //% block="B"
-        btnB = MesDpadButtonInfo.BDown,
+        btnB,
         //% block="C"
-        btnC = MesDpadButtonInfo.CDown,
+        btnC,
         //% block="D"
-        btnD = MesDpadButtonInfo.DDown
+        btnD
     }
 
     export enum NumberButton {
         //% block="1"
-        btn1 = MesDpadButtonInfo._1Down,
+        btn1,
         //% block="2"
-        btn2 = MesDpadButtonInfo._2Down,
+        btn2,
         //% block="3"
-        btn3 = MesDpadButtonInfo._3Down,
+        btn3,
         //% block="4"
-        btn4 = MesDpadButtonInfo._4Down
+        btn4
     }
 
     /* --------------------------------------------------------------------- */
@@ -2842,7 +2842,15 @@ namespace bleDabble {
     //% weight=2
     //% group="Gamepad (Alphabet Keys)"
     export function alphabetGamepad(btn: AlphabetButton): boolean {
-        devices.onGamepadButton(btn, function () { return true; });
+        let e: MesDpadButtonInfo;
+        switch (btn) {
+            case AlphabetButton.btnA: e = MesDpadButtonInfo.ADown; break;
+            case AlphabetButton.btnB: e = MesDpadButtonInfo.BDown; break;
+            case AlphabetButton.btnC: e = MesDpadButtonInfo.CDown; break;
+            case AlphabetButton.btnD: e = MesDpadButtonInfo.DDown; break;
+        }
+
+        devices.onGamepadButton(e, function () { return true; });
         return false;
     }
 
@@ -2856,6 +2864,14 @@ namespace bleDabble {
     //% weight=1
     //% group="Gamepad (Number Keys)"
     export function numberGamepad(btn: NumberButton): boolean {
+        let e: MesDpadButtonInfo;
+        switch (btn) {
+            case NumberButton.btn1: e = MesDpadButtonInfo._1Down; break;
+            case NumberButton.btn2: e = MesDpadButtonInfo._2Down; break;
+            case NumberButton.btn3: e = MesDpadButtonInfo._3Down; break;
+            case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
+        }
+
         devices.onGamepadButton(btn, function () { return true; });
         return false;
     }
