@@ -2856,8 +2856,9 @@ namespace bleDabble {
         });
 
         //! Use for Debug
-        serial.writeLine("btn: "); serial.writeNumber(e); serial.writeLine("");
-        serial.writeLine("sts: "); serial.writeNumber(status); serial.writeLine("");
+        serial.writeLine(String(e));
+        serial.writeLine(String(status));
+        serial.writeLine("---");
 
         return status;
     }
@@ -2886,8 +2887,9 @@ namespace bleDabble {
         });
 
         //! Use for Debug
-        serial.writeLine("btn: "); serial.writeNumber(e); serial.writeLine("");
-        serial.writeLine("sts: "); serial.writeNumber(status); serial.writeLine("");
+        serial.writeLine(String(e));
+        serial.writeLine(String(status));
+        serial.writeLine("---");
 
         return status;
     }
