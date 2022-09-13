@@ -2804,7 +2804,7 @@ namespace ir1838 {
 //! pxt-bleDabble
 
 //% color="#FEBC68" weight=1 icon="\uf294" block="MKE-M15"
-//% groups="['Gamepad', 'Buttons A and B']"
+//% groups="['Gamepad (Number Keys)', 'Gamepad (Alphabet Keys)']"
 namespace bleDabble {
     export enum AlphabetButton {
         //% block="A"
@@ -2831,14 +2831,14 @@ namespace bleDabble {
     /* --------------------------------------------------------------------- */
 
     /**
-     * !
-     * @param btn x
+     * Check if the button is being pressed
+     * @param btn select push button
      */
     //% block="Is $btn pressed on GamePad?"
     //% btn.defl=AlphabetButton.btnA
     //% inlineInputMode=inline
-    //% weight=4
-    //% group="Gamepad"
+    //% weight=2
+    //% group="Gamepad (Alphabet Keys)"
     export function alphabetGamepad(btn: AlphabetButton): boolean {
         let status = false;
         switch (btn) {
@@ -2862,14 +2862,14 @@ namespace bleDabble {
     }
 
     /**
-     * !
-     * @param btn x
+     * Check if the button is being pressed
+     * @param btn select push button
      */
     //% block="Is $btn pressed on GamePad?"
     //% btn.defl=NumberButton.btn1
     //% inlineInputMode=inline
-    //% weight=3
-    //% group="Gamepad"
+    //% weight=1
+    //% group="Gamepad (Number Keys)"
     export function numberGamepad(btn: NumberButton): boolean {
         let status = false;
         switch (btn) {
@@ -2890,29 +2890,5 @@ namespace bleDabble {
             return true;
         else
             return false;
-    }
-
-    /* --------------------------------------------------------------------- */
-
-    /**
-     * !
-     */
-    //% block="Is button A pressed?"
-    //% inlineInputMode=inline
-    //% weight=2
-    //% group="Buttons A and B"
-    export function buttonA(): boolean {
-        //
-    }
-
-    /**
-     * !
-     */
-    //% block="Is button B pressed?"
-    //% inlineInputMode=inline
-    //% weight=1
-    //% group="Buttons A and B"
-    export function buttonB(): boolean {
-        //
     }
 }
