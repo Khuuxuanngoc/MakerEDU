@@ -2850,8 +2850,16 @@ namespace bleDabble {
             case AlphabetButton.btnD: e = MesDpadButtonInfo.DDown; break;
         }
 
-        devices.onGamepadButton(e, function () { return true; });
-        return false;
+        let status = false;
+        devices.onGamepadButton(e, function () {
+            status = true;
+        });
+
+        //! Use for Debug
+        serial.writeLine(e);
+        serial.writeLine(status);
+
+        return status;
     }
 
     /**
@@ -2871,8 +2879,16 @@ namespace bleDabble {
             case NumberButton.btn3: e = MesDpadButtonInfo._3Down; break;
             case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
         }
+        
+        let status = false;
+        devices.onGamepadButton(e, function () {
+            status = true;
+        });
 
-        devices.onGamepadButton(e, function () { return true; });
-        return false;
+        //! Use for Debug
+        serial.writeLine(e);
+        serial.writeLine(status);
+        
+        return status;
     }
 }
