@@ -2872,7 +2872,7 @@ namespace bleDabble {
             case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
         }
 
-        devices.onGamepadButton(btn, function () { return true; });
+        devices.onGamepadButton(e, function () { return true; });
         return false;
     }
 }
