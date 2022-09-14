@@ -2801,11 +2801,11 @@ namespace ir1838 {
 /*                              MODULE BLUETOOTH                             */
 /* ------------------------------------------------------------------------- */
 
-//! pxt-bleDabble
+//! pxt-bleMicrobit
 
 //% color="#FEBC68" weight=1 icon="\uf294" block="MKE-M15"
 //% groups="['Gamepad (Number Keys)', 'Gamepad (Alphabet Keys)']"
-namespace bleDabble {
+namespace bleMicrobit {
     export enum AlphabetButton {
         //% block="A"
         btnA,
@@ -2852,12 +2852,14 @@ namespace bleDabble {
 
         let status = false;
         devices.onGamepadButton(e, function () {
+            //! Use for Debug
+            serial.writeLine("ok");
+
             status = true;
         });
 
         //! Use for Debug
         serial.writeLine(e.toString());
-        serial.writeLine(status.toString());
         serial.writeLine("---");
 
         return status;
@@ -2883,12 +2885,14 @@ namespace bleDabble {
 
         let status = false;
         devices.onGamepadButton(e, function () {
+            //! Use for Debug
+            serial.writeLine("ok");
+            
             status = true;
         });
 
         //! Use for Debug
         serial.writeLine(e.toString());
-        serial.writeLine(status.toString());
         serial.writeLine("---");
 
         return status;
