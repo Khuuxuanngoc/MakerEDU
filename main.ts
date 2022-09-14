@@ -2854,14 +2854,11 @@ namespace bleMicrobit {
         devices.onGamepadButton(e, function () {
             //! Use for Debug
             serial.writeLine("ok");
+            serial.writeLine(e.toString());
+            serial.writeLine("---");
 
             status = true;
         });
-
-        //! Use for Debug
-        serial.writeLine(e.toString());
-        serial.writeLine("---");
-
         return status;
     }
 
@@ -2887,14 +2884,11 @@ namespace bleMicrobit {
         devices.onGamepadButton(e, function () {
             //! Use for Debug
             serial.writeLine("ok");
-            
+            serial.writeLine(e.toString());
+            serial.writeLine("---");
+
             status = true;
         });
-
-        //! Use for Debug
-        serial.writeLine(e.toString());
-        serial.writeLine("---");
-
         return status;
     }
 }
