@@ -2853,11 +2853,7 @@ namespace bleMicrobit {
         let status = false;
         devices.onGamepadButton(e, function () {
             //! Use for Debug
-            serial.writeLine("ok");
             serial.writeLine(e.toString());
-            serial.writeLine("---");
-
-            status = true;
         });
         return status;
     }
@@ -2883,11 +2879,7 @@ namespace bleMicrobit {
         let status = false;
         devices.onGamepadButton(e, function () {
             //! Use for Debug
-            serial.writeLine("ok");
             serial.writeLine(e.toString());
-            serial.writeLine("---");
-
-            status = true;
         });
         return status;
     }
