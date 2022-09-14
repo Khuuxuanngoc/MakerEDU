@@ -2801,86 +2801,90 @@ namespace ir1838 {
 /*                              MODULE BLUETOOTH                             */
 /* ------------------------------------------------------------------------- */
 
-//! pxt-bleMicrobit
+// //! pxt-bleMicrobit
 
-//% color="#FEBC68" weight=1 icon="\uf294" block="MKE-M15"
-//% groups="['Gamepad (Number Keys)', 'Gamepad (Alphabet Keys)']"
-namespace bleMicrobit {
-    export enum AlphabetButton {
-        //% block="A"
-        btnA,
-        //% block="B"
-        btnB,
-        //% block="C"
-        btnC,
-        //% block="D"
-        btnD
-    }
+// //% color="#FEBC68" weight=1 icon="\uf294" block="MKE-M15"
+// //% groups="['Gamepad (Number Keys)', 'Gamepad (Alphabet Keys)']"
+// namespace bleMicrobit {
+//     export enum AlphabetButton {
+//         //% block="A"
+//         btnA,
+//         //% block="B"
+//         btnB,
+//         //% block="C"
+//         btnC,
+//         //% block="D"
+//         btnD
+//     }
 
-    export enum NumberButton {
-        //% block="1"
-        btn1,
-        //% block="2"
-        btn2,
-        //% block="3"
-        btn3,
-        //% block="4"
-        btn4
-    }
+//     export enum NumberButton {
+//         //% block="1"
+//         btn1,
+//         //% block="2"
+//         btn2,
+//         //% block="3"
+//         btn3,
+//         //% block="4"
+//         btn4
+//     }
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /**
-     * Check if the button is being pressed
-     * @param btn select push button
-     */
-    //% block="Is $btn pressed on GamePad?"
-    //% btn.defl=AlphabetButton.btnA
-    //% inlineInputMode=inline
-    //% weight=2
-    //% group="Gamepad (Alphabet Keys)"
-    export function alphabetGamepad(btn: AlphabetButton): boolean {
-        let e: MesDpadButtonInfo;
-        switch (btn) {
-            case AlphabetButton.btnA: e = MesDpadButtonInfo.ADown; break;
-            case AlphabetButton.btnB: e = MesDpadButtonInfo.BDown; break;
-            case AlphabetButton.btnC: e = MesDpadButtonInfo.CDown; break;
-            case AlphabetButton.btnD: e = MesDpadButtonInfo.DDown; break;
-        }
+//     /**
+//      * Check if the button is being pressed
+//      * @param btn select push button
+//      */
+//     //% block="Is $btn pressed on GamePad?"
+//     //% btn.defl=AlphabetButton.btnA
+//     //% inlineInputMode=inline
+//     //% weight=2
+//     //% group="Gamepad (Alphabet Keys)"
+//     export function alphabetGamepad(btn: AlphabetButton): boolean {
+//         let e: MesDpadButtonInfo;
+//         switch (btn) {
+//             case AlphabetButton.btnA: e = MesDpadButtonInfo.ADown; break;
+//             case AlphabetButton.btnB: e = MesDpadButtonInfo.BDown; break;
+//             case AlphabetButton.btnC: e = MesDpadButtonInfo.CDown; break;
+//             case AlphabetButton.btnD: e = MesDpadButtonInfo.DDown; break;
+//         }
 
-        let status = false;
-        devices.onGamepadButton(e, function () {
-            //! Use for Debug
-            serial.writeLine(e.toString());
-        });
-        return status;
-    }
+//         let status = false;
+//         devices.onGamepadButton(e, function () {
+//             //! Use for Debug
+//             serial.writeLine(e.toString());
 
-    /**
-     * Check if the button is being pressed
-     * @param btn select push button
-     */
-    //% block="Is $btn pressed on GamePad?"
-    //% btn.defl=NumberButton.btn1
-    //% inlineInputMode=inline
-    //% weight=1
-    //% group="Gamepad (Number Keys)"
-    export function numberGamepad(btn: NumberButton): boolean {
-        let e: MesDpadButtonInfo;
-        switch (btn) {
-            case NumberButton.btn1: e = MesDpadButtonInfo._1Down; break;
-            case NumberButton.btn2: e = MesDpadButtonInfo._2Down; break;
-            case NumberButton.btn3: e = MesDpadButtonInfo._3Down; break;
-            case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
-        }
+//             status = true;
+//         });
+//         return status;
+//     }
 
-        let status = false;
-        devices.onGamepadButton(e, function () {
-            //! Use for Debug
-            serial.writeLine(e.toString());
-        });
-        return status;
-    }
-}
+//     /**
+//      * Check if the button is being pressed
+//      * @param btn select push button
+//      */
+//     //% block="Is $btn pressed on GamePad?"
+//     //% btn.defl=NumberButton.btn1
+//     //% inlineInputMode=inline
+//     //% weight=1
+//     //% group="Gamepad (Number Keys)"
+//     export function numberGamepad(btn: NumberButton): boolean {
+//         let e: MesDpadButtonInfo;
+//         switch (btn) {
+//             case NumberButton.btn1: e = MesDpadButtonInfo._1Down; break;
+//             case NumberButton.btn2: e = MesDpadButtonInfo._2Down; break;
+//             case NumberButton.btn3: e = MesDpadButtonInfo._3Down; break;
+//             case NumberButton.btn4: e = MesDpadButtonInfo._4Down; break;
+//         }
+
+//         let status = false;
+//         devices.onGamepadButton(e, function () {
+//             //! Use for Debug
+//             serial.writeLine(e.toString());
+
+//             status = true;
+//         });
+//         return status;
+//     }
+// }
