@@ -18,16 +18,16 @@ namespace ultraSonic {
     /**
      * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
      * @param unit desired conversion unit
-     * @param maxCmDistance maximum distance in centimeters (default is 300)
      * @param echo echo pin
      * @param trig trigger pin
+     * @param maxCmDistance maximum distance in centimeters (default is 300)
      */
     //% block="UltraSonic \\| Read distance $unit from EchoPin $echo and TriggerPin $trig"
     //% unit.defl=PingUnit.Centimeters
     //% echo.defl=DigitalPin.P14 echo.fieldEditor="gridpicker" echo.fieldOptions.columns=4
     //% trig.defl=DigitalPin.P15 trig.fieldEditor="gridpicker" trig.fieldOptions.columns=4
     //% inlineInputMode=inline
-    export function readDistance(unit: PingUnit, maxCmDistance = 300, echo: DigitalPin, trig: DigitalPin): number {
+    export function readDistance(unit: PingUnit, echo: DigitalPin, trig: DigitalPin, maxCmDistance = 300): number {
         /* Send pulse */
         pins.setPull(trig, PinPullMode.PullNone);
         pins.digitalWritePin(trig, 0);  // Clears the TriggerPin condition
