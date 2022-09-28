@@ -11,7 +11,8 @@
         "main.ts",
         "README.md",
         "pxt-ds18b20.cpp",
-        "pxt-ds3231.cpp"
+        "pxt-ds3231.cpp",
+        "shims.d.ts"
     ],
     "testFiles": [
         "test.ts"
