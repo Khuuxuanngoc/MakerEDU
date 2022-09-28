@@ -21,12 +21,12 @@
         "target": "5.0.12",
         "targetId": "microbit"
     },
-    "searchOnly": true,
-    "icon": "https://raw.githubusercontent.com/TrungKuro/MakerEDU/master/img/MakerEdu%20Robotics.jpg",
     "supportedTargets": [
         "microbit"
     ],
     "preferredEditor": "tsprj",
+    "searchOnly": true,
+    "icon": "https://raw.githubusercontent.com/TrungKuro/MakerEDU/master/img/MakerEdu%20Robotics.jpg",
     "yotta": {
         "config": {
             "microbit-dal": {
