@@ -26,8 +26,6 @@
         "microbit"
     ],
     "preferredEditor": "tsprj",
-    "searchOnly": true,
-    "icon": "https://raw.githubusercontent.com/TrungKuro/MakerEDU/master/img/MakerEdu%20Robotics.jpg",
     "yotta": {
         "config": {
             "microbit-dal": {
