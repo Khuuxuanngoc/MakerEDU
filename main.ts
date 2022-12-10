@@ -18,16 +18,14 @@ namespace ultraSonic {
     /**
      * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
      * @param unit desired conversion unit
-     * @param echo echo pin
-     * @param trig trigger pin
-     * @param maxCmDistance maximum distance in centimeters (default is 300)
+     * @param echo echo pin P8
+     * @param trig trigger pin P16
+     * @param maxCmDistance maximum distance in centimeters (default is 300 cm)
      */
-    //% block="UltraSonic \\| Read distance $unit from EchoPin $echo and TriggerPin $trig"
+    //% block="UltraSonic \\| Read distance $unit from P8+P16 port"
     //% unit.defl=PingUnit.Centimeters
-    //% echo.defl=DigitalPin.P14 echo.fieldEditor="gridpicker" echo.fieldOptions.columns=4
-    //% trig.defl=DigitalPin.P15 trig.fieldEditor="gridpicker" trig.fieldOptions.columns=4
     //% inlineInputMode=inline
-    export function readDistance(unit: PingUnit, echo: DigitalPin, trig: DigitalPin, maxCmDistance = 300): number {
+    export function readDistance(unit: PingUnit, echo: DigitalPin.P8, trig: DigitalPin.P16, maxCmDistance = 300): number {
         /* Send pulse */
         pins.setPull(trig, PinPullMode.PullNone);
         pins.digitalWritePin(trig, 0);  // Clears the TriggerPin condition
@@ -81,6 +79,21 @@ namespace dht11 {
         Fahrenheit
     }
 
+    export enum PinKit {
+        //% block="P0"
+        P0,
+        //% block="P1"
+        P1,
+        //% block="P2"
+        P2,
+        //% block="P13"
+        P13,
+        //% block="P14"
+        P14,
+        //% block="P15"
+        P15
+    }
+
     /* --------------------------------------------------------------------- */
 
     const DHT11_SAMPLE_TIME = 2000; // 2,000 (ms)
@@ -102,7 +115,7 @@ namespace dht11 {
 
     /* --------------------------------------------------------------------- */
 
-    export function read(sig: DigitalPin): boolean {
+    export function read(sig: PinKit): boolean {
         /**
          * Check if sensor was read less than 2 seconds ago
          * And return early to use last reading
@@ -116,29 +129,40 @@ namespace dht11 {
         for (let i = 0; i < 40; i++) buffer[i] = false;
         data[0] = data[1] = data[2] = data[3] = data[4] = 0;
 
+        /* Port? */
+        let pin;
+        switch (sig) {
+            case PinKit.P0: pin = DigitalPin.P0; break;
+            case PinKit.P1: pin = DigitalPin.P1; break;
+            case PinKit.P2: pin = DigitalPin.P2; break;
+            case PinKit.P13: pin = DigitalPin.P13; break;
+            case PinKit.P14: pin = DigitalPin.P14; break;
+            case PinKit.P15: pin = DigitalPin.P15; break;
+        }
+
         /* 1. Start Signal */
-        pins.digitalWritePin(sig, 0);   // Set data line LOW
+        pins.digitalWritePin(pin, 0);   // Set data line LOW
         basic.pause(18);                // At least 18ms
 
         /* 2. End the "Start Signal" */
-        pins.setPull(sig, PinPullMode.PullUp);
-        pins.digitalReadPin(sig);
+        pins.setPull(pin, PinPullMode.PullUp);
+        pins.digitalReadPin(pin);
         control.waitMicros(30);         // Delay a moment (20us - 40us) to let sensor pull data line LOW
 
         /* 3. DHT Response */
         _startTime = control.micros();
-        while (pins.digitalReadPin(sig) === 0) {        // LOW 80us
+        while (pins.digitalReadPin(pin) === 0) {        // LOW 80us
             if (control.micros() - _startTime > DHT11_TIMEOUT) break;
         }
         _startTime = control.micros();
-        while (pins.digitalReadPin(sig) === 1) {        // HIGH 80us
+        while (pins.digitalReadPin(pin) === 1) {        // HIGH 80us
             if (control.micros() - _startTime > DHT11_TIMEOUT) break;
         }
 
         /* 4. Read Data - 40 bit */
         for (let dataBits = 0; dataBits < 40; dataBits++) {
             _startTime = control.micros();
-            while (pins.digitalReadPin(sig) === 0) {    // LOW 50us
+            while (pins.digitalReadPin(pin) === 0) {    // LOW 50us
                 if (control.micros() - _startTime > DHT11_TIMEOUT) break;
             }
             /**
@@ -149,9 +173,9 @@ namespace dht11 {
              */
             _startTime = control.micros();
             control.waitMicros(28);
-            if (pins.digitalReadPin(sig) === 1) {
+            if (pins.digitalReadPin(pin) === 1) {
                 buffer[dataBits] = true;
-                while (pins.digitalReadPin(sig) === 1) {
+                while (pins.digitalReadPin(pin) === 1) {
                     if (control.micros() - _startTime > DHT11_TIMEOUT) break;
                 }
             }
@@ -199,15 +223,15 @@ namespace dht11 {
 
     /**
      * Read the ambient air temperature
-     * @param sig signal pin
+     * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DHT11 \\| Read temperature from pin $sig in degree $unit"
-    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% block="DHT11 \\| Read temperature from $sig port in degree $unit"
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
     //% weight=2
-    export function readTemperature(sig: DigitalPin, unit: TemperatureType): number {
+    export function readTemperature(sig: PinKit, unit: TemperatureType): number {
         let t = 0;
         if (read(sig)) {
             (unit == TemperatureType.Celsius) ? (t = _temperature) : (t = _temperature * 1.8 + 32);
@@ -217,14 +241,14 @@ namespace dht11 {
 
     /**
      * Read ambient air humidity
-     * @param sig signal pin
+     * @param sig signal pin (default P0)
      */
-    //% block="DHT11 \\| Read air humidity (\\%) from pin $sig"
-    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% block="DHT11 \\| Read air humidity (\\%) from $sig port"
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
     //% weight=1
-    export function readHumidity(sig: DigitalPin): number {
+    export function readHumidity(sig: PinKit): number {
         let h = 0;
         if (read(sig)) {
             h = _humidity;
@@ -248,10 +272,25 @@ namespace ds18b20 {
         Fahrenheit
     }
 
+    export enum PinKit {
+        //% block="P0"
+        P0,
+        //% block="P1"
+        P1,
+        //% block="P2"
+        P2,
+        //% block="P13"
+        P13,
+        //% block="P14"
+        P14,
+        //% block="P15"
+        P15
+    }
+
     /* --------------------------------------------------------------------- */
 
     //% shim=ds18b20::temperature
-    export function temperature(sig: DigitalPin): number {
+    export function temperature(pin: DigitalPin): number {
         return 999;
     }
 
@@ -259,15 +298,26 @@ namespace ds18b20 {
 
     /**
      * Read the ambient air temperature
-     * @param sig signal pin
+     * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DS18B20 \\| Read temperature from pin $sig in degree $unit"
-    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% block="DS18B20 \\| Read temperature from $sig port in degree $unit"
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
-    export function readTemperature(sig: DigitalPin, unit: TemperatureType): number {
-        let t = temperature(sig);
+    export function readTemperature(sig: PinKit, unit: TemperatureType): number {
+        /* Port? */
+        let pin;
+        switch (sig) {
+            case PinKit.P0: pin = DigitalPin.P0; break;
+            case PinKit.P1: pin = DigitalPin.P1; break;
+            case PinKit.P2: pin = DigitalPin.P2; break;
+            case PinKit.P13: pin = DigitalPin.P13; break;
+            case PinKit.P14: pin = DigitalPin.P14; break;
+            case PinKit.P15: pin = DigitalPin.P15; break;
+        }
+
+        let t = temperature(pin);
         if (t == 999) {
             return 0;
         } else {
@@ -501,20 +551,18 @@ namespace lcd {
 
     /**
      * Show a string into LCD at a given position
-     * @param addr is I2C address for LCD
      * @param text is the string will be shown
      * @param col is LCD column position
      * @param row is LCD row position
      */
-    //% block="LCD address $addr \\| Print $text at Column $col and Row $row"
-    //% addr.defl=Address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% block="LCD I2C port \\| Print $text at Column $col and Row $row"
     //% text.defl="MakerEDU"
     //% col.defl=1 col.min=1 col.max=20
     //% row.defl=1 row.min=1 row.max=4
     //% inlineInputMode=inline
     //% weight=3
     //% group="Display"
-    export function displayText(addr: Address, text: string, col: number, row: number) {
+    export function displayText(addr: Address.add39, text: string, col: number, row: number) {
         /* Make sure to initialize each LCD once */
         if (!_initOneTime[addr - 32]) {
             initLCD(addr);
@@ -573,14 +621,12 @@ namespace lcd {
 
     /**
      * Clear all display content
-     * @param addr is the I2C address for LCD
      */
-    //% block="LCD address $addr \\| Clean all"
-    //% addr.defl=Address.add39 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% block="LCD I2C port \\| Clean all"
     //% inlineInputMode=inline
     //% weight=1
     //% group="Clean"
-    export function clearScreen(addr: Address) {
+    export function clearScreen(addr: Address.add39) {
         /* Make sure to initialize each LCD once */
         if (!_initOneTime[addr - 32]) {
             initLCD(addr);
@@ -799,7 +845,7 @@ namespace ds3231 {
      * Get Day, Month, Year data from DS3231
      * @param calendar select get data Day, Month or Year
      */
-    //% block="DS3231 \\| Get $calendar in Calendar"
+    //% block="DS3231 I2C port \\| Get $calendar in Calendar"
     //% calendar.defl=Calendar.Day
     //% inlineInputMode=inline
     //% weight=11
@@ -815,7 +861,7 @@ namespace ds3231 {
     /**
      * Get "Date of Week" data from DS3231
      */
-    //% block="DS3231 \\| Get Days of the Week"
+    //% block="DS3231 I2C port \\| Get Days of the Week"
     //% inlineInputMode=inline
     //% weight=10
     //% group="Get Info Time (Data)"
@@ -836,7 +882,7 @@ namespace ds3231 {
      * Get Hour, Minute, Second data from DS3231
      * @param clock select get data Hour, Minute or Second
      */
-    //% block="DS3231 \\| Get $clock in Time now"
+    //% block="DS3231 I2C port \\| Get $clock in Time now"
     //% clock.defl=Clock.Hour
     //% inlineInputMode=inline
     //% weight=9
@@ -852,7 +898,7 @@ namespace ds3231 {
     /**
      * Get aggregated __DATE__ data
      */
-    //% block="DS3231 \\| Get Calendar"
+    //% block="DS3231 I2C port \\| Get Calendar"
     //% inlineInputMode=inline
     //% weight=8
     //% group="Get Info Time (Text)"
@@ -873,7 +919,7 @@ namespace ds3231 {
     /**
      * Get aggregated __TIME__ data
      */
-    //% block="DS3231 \\| Get Time now"
+    //% block="DS3231 I2C port \\| Get Time now"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Get Info Time (Text)"
@@ -933,7 +979,7 @@ namespace ds3231 {
      * @param hour choose Hour
      * @param minute choose Minute
      */
-    //% block="DS3231 \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
+    //% block="DS3231 I2C port \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
     //% day.defl=1 day.min=1 day.max=31
     //% month.defl=Month.Jan
     //% year.defl=2022 year.min=2000 year.max=2099
@@ -961,7 +1007,7 @@ namespace ds3231 {
      * Set the Date & Time for the DS3231 using the command
      * @param setFullTime install by command according to the syntax "ST-dd/mm/yyyy-hh:mm:ss"
      */
-    //% block="DS3231 \\| Setting Date & Time $setFullTime"
+    //% block="DS3231 I2C port \\| Setting Date & Time $setFullTime"
     //% setFullTime.defl="ST-15/08/2022-13:13:13"
     //% inlineInputMode=inline
     //% weight=4
@@ -1019,7 +1065,7 @@ namespace ds3231 {
      * @param minute choose Minute
      * @param types alarm once or every day
      */
-    //% block="DS3231 \\| Set Alarm at $hour Hour : $minute Minute $types"
+    //% block="DS3231 I2C port \\| Set Alarm at $hour Hour : $minute Minute $types"
     //% hour.defl=11 hour.min=0 hour.max=23
     //% minute.defl=30 minute.min=0 minute.max=59
     //% types.defl=Alarm.OneTime
@@ -1037,7 +1083,7 @@ namespace ds3231 {
      * @param ticks install by command according to the syntax "ST-hh:mm"
      * @param types alarm once or every day
      */
-    //% block="DS3231 \\| Setting Alarm $ticks $types"
+    //% block="DS3231 I2C port \\| Setting Alarm $ticks $types"
     //% ticks.defl="SA-15:30"
     //% types.defl=Alarm.OneTime
     //% inlineInputMode=inline
@@ -1071,7 +1117,7 @@ namespace ds3231 {
     /**
      * Update the time to see if it's time for the alarm
      */
-    //% block="DS3231 \\| Check Alarm 💤⏰"
+    //% block="DS3231 I2C port \\| Check Alarm 💤⏰"
     //% inlineInputMode=inline
     //% weight=1
     //% group="Alarm"
@@ -1701,10 +1747,10 @@ namespace mp3Player {
          * rate : the baud rate for transmitting and receiving data
          * 
          * MP3Player <----> MicroBit
-         * RX               P14 (TX)
-         * TX               P15 (RX)
+         * RX               P14 (old) / P8  (new) (TX)
+         * TX               P15 (old) / P16 (new) (RX)
          */
-        serial.redirect(SerialPin.P14, SerialPin.P15, BaudRate.BaudRate9600);
+        serial.redirect(SerialPin.P8, SerialPin.P16, BaudRate.BaudRate9600);
     }
 
     /* Calculate Checksum */
@@ -2018,7 +2064,7 @@ namespace mp3Player {
     /**
      * Perform volume up
      */
-    //% block="MP3 Player \\| Up volume"
+    //% block="MP3 Player P8+P16 port \\| Up volume"
     //% inlineInputMode=inline
     //% weight=13
     //% group="Setting"
@@ -2032,7 +2078,7 @@ namespace mp3Player {
     /**
      * Perform volume down
      */
-    //% block="MP3 Player \\| Down volume"
+    //% block="MP3 Player P8+P16 port \\| Down volume"
     //% inlineInputMode=inline
     //% weight=12
     //% group="Setting"
@@ -2047,7 +2093,7 @@ namespace mp3Player {
      * Perform volume adjustment
      * @param volume select sound level from 0 to 30
      */
-    //% block="MP3 Player \\| Set volume level $volume"
+    //% block="MP3 Player P8+P16 port \\| Set volume level $volume"
     //% volume.defl=20 volume.min=0 volume.max=30
     //% inlineInputMode=inline
     //% weight=11
@@ -2063,7 +2109,7 @@ namespace mp3Player {
      * Adjust the EQ of the sound
      * @param chooseEQ select EQ format
      */
-    //% block="MP3 Player \\| Set EQ $chooseEQ"
+    //% block="MP3 Player P8+P16 port \\| Set EQ $chooseEQ"
     //% chooseEQ.defl=EQ.Normal
     //% inlineInputMode=inline
     //% weight=10
@@ -2079,7 +2125,7 @@ namespace mp3Player {
      * Play the music file of your choice
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player \\| Play file number $file"
+    //% block="MP3 Player P8+P16 port \\| Play file number $file"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=9
@@ -2098,7 +2144,7 @@ namespace mp3Player {
      * Play the next or previous music file compared to the current music file
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player \\| Play $playWhat"
+    //% block="MP3 Player P8+P16 port \\| Play $playWhat"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=8
@@ -2116,7 +2162,7 @@ namespace mp3Player {
     /**
      * Pause the currently playing file
      */
-    //% block="MP3 Player \\| Pause"
+    //% block="MP3 Player P8+P16 port \\| Pause"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Control"
@@ -2130,7 +2176,7 @@ namespace mp3Player {
     /**
      * Play continues with paused file music
      */
-    //% block="MP3 Player \\| Start (Play continues)"
+    //% block="MP3 Player P8+P16 port \\| Start (Play continues)"
     //% inlineInputMode=inline
     //% weight=6
     //% group="Control"
@@ -2144,7 +2190,7 @@ namespace mp3Player {
     /**
      * Get the parameters being set in MP3 Player
      */
-    //% block="MP3 Player \\| Read information setting current"
+    //% block="MP3 Player P8+P16 port \\| Read information setting current"
     //% inlineInputMode=inline
     //% weight=5
     //% group="Get Info"
@@ -2157,7 +2203,7 @@ namespace mp3Player {
      * @param file select the music file you want to play
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player \\| Play file number $file in $second seconds"
+    //% block="MP3 Player P8+P16 port \\| Play file number $file in $second seconds"
     //% file.defl=1 file.min=0 file.max=65535
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -2174,7 +2220,7 @@ namespace mp3Player {
      * Play the music file of your choice until the song is over
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player \\| Play file number $file until done"
+    //% block="MP3 Player P8+P16 port \\| Play file number $file until done"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=3
@@ -2195,7 +2241,7 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player \\| Play $playWhat in $second seconds"
+    //% block="MP3 Player P8+P16 port \\| Play $playWhat in $second seconds"
     //% playWhat.defl=PlayWhat.Next
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -2212,7 +2258,7 @@ namespace mp3Player {
      * Play next or previous music file until the song is over
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player \\| Play $playWhat until done"
+    //% block="MP3 Player P8+P16 port \\| Play $playWhat until done"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=1
@@ -2429,6 +2475,21 @@ namespace ir1838 {
         Number_7 = 0x42,
         Number_8 = 0x52,
         Number_9 = 0x4A
+    }
+
+    export enum PinKit {
+        //% block="P0"
+        P0,
+        //% block="P1"
+        P1,
+        //% block="P2"
+        P2,
+        //% block="P13"
+        P13,
+        //% block="P14"
+        P14,
+        //% block="P15"
+        P15
     }
 
     /* --------------------------------------------------------------------- */
@@ -2697,7 +2758,18 @@ namespace ir1838 {
         }
     }
 
-    export function connectIrReceiver(pin: DigitalPin) {
+    export function connectIrReceiver(sig: PinKit) {
+        /* Port? */
+        let pin;
+        switch (sig) {
+            case PinKit.P0: pin = DigitalPin.P0; break;
+            case PinKit.P1: pin = DigitalPin.P1; break;
+            case PinKit.P2: pin = DigitalPin.P2; break;
+            case PinKit.P13: pin = DigitalPin.P13; break;
+            case PinKit.P14: pin = DigitalPin.P14; break;
+            case PinKit.P15: pin = DigitalPin.P15; break;
+        }
+
         initIrState();
         enableIrMarkSpaceDetection(pin);
         background.schedule(notifyIrEvents, background.Thread.Priority, background.Mode.Repeat, REPEAT_TIMEOUT_MS);
@@ -2724,15 +2796,15 @@ namespace ir1838 {
     /**
      * Read received IR signal value, NEC standard
      * @param chooseValue select the type of value IR you want to read
-     * @param sig signal pin
+     * @param sig signal pin (default P0)
      */
-    //% block="IR1838 \\| Read $chooseValue NEC from pin $sig"
+    //% block="IR1838 \\| Read $chooseValue NEC from $sig port"
     //% chooseValue.defl=ValueIR.Command
-    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     //% weight=2
     //% group="Get Info Infrared (Data)"
-    export function readValueIR(chooseValue: ValueIR, sig: DigitalPin): number {
+    export function readValueIR(chooseValue: ValueIR, sig: PinKit): number {
         /* Make sure to initialize IR at first use */
         if (!_initOneTime) {
             connectIrReceiver(sig);
@@ -2762,14 +2834,14 @@ namespace ir1838 {
 
     /**
      * Print all information about the received IR signal, NEC standard
-     * @param sig signal pin
+     * @param sig signal pin (default P0)
      */
-    //% block="IR1838 \\| Print IR NEC result short from pin $sig"
-    //% sig.defl=DigitalPin.P8 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=4
+    //% block="IR1838 \\| Print IR NEC result short from $sig port"
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     //% weight=1
     //% group="Get Info Infrared (Text)"
-    export function printValueIR(sig: DigitalPin): string {
+    export function printValueIR(sig: PinKit): string {
         /* Make sure to initialize IR at first use */
         if (!_initOneTime) {
             connectIrReceiver(sig);
