@@ -28,10 +28,10 @@ namespace ultraSonic {
      * @param port select 4-pin port
      * @param maxCmDistance maximum distance in centimeters (default is 300 cm)
      */
-    //% block="UltraSonic //| Read distance $unit from $port port"
+    //% block="UltraSonic \\| Read distance $unit from $port port"
     //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
     //% unit.defl=PingUnit.Centimeters
-    //% inlineInputMode=inline
+    //% inlineInputMode=external
     export function readDistance(unit: PingUnit, port: PinKit, maxCmDistance = 300): number {
         /* Port? */
         let echo, trig;
@@ -240,10 +240,10 @@ namespace dht11 {
      * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DHT11 //| Read temperature from $sig port in degree $unit"
+    //% block="DHT11 \\| Read temperature from $sig port in degree $unit"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=inline
+    //% inlineInputMode=external
     //% weight=2
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
         let t = 0;
@@ -257,10 +257,10 @@ namespace dht11 {
      * Read ambient air humidity
      * @param sig signal pin (default P0)
      */
-    //% block="DHT11 //| Read air humidity (\\%) from $sig port"
+    //% block="DHT11 \\| Read air humidity (\\%) from $sig port"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=inline
+    //% inlineInputMode=external
     //% weight=1
     export function readHumidity(sig: PinKit): number {
         let h = 0;
@@ -315,10 +315,10 @@ namespace ds18b20 {
      * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DS18B20 //| Read temperature from $sig port in degree $unit"
+    //% block="DS18B20 \\| Read temperature from $sig port in degree $unit"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=inline
+    //% inlineInputMode=external
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
         let t = temperature(sig);
         if (t == 999) {
