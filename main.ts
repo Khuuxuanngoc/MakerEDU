@@ -13,19 +13,33 @@ namespace ultraSonic {
         Inches
     }
 
+    export enum PinKit {
+        //% block="P0+P1"
+        Port1,
+        //% block="P2+P8"
+        Port2
+    }
+
     /* --------------------------------------------------------------------- */
 
     /**
      * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
      * @param unit desired conversion unit
-     * @param echo echo pin P8
-     * @param trig trigger pin P16
+     * @param port select 4-pin port
      * @param maxCmDistance maximum distance in centimeters (default is 300 cm)
      */
-    //% block="UltraSonic \\| Read distance $unit from P8+P16 port"
+    //% block="UltraSonic \\| Read distance $unit from $port port"
+    //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
     //% unit.defl=PingUnit.Centimeters
     //% inlineInputMode=inline
-    export function readDistance(unit: PingUnit, echo: DigitalPin.P8, trig: DigitalPin.P16, maxCmDistance = 300): number {
+    export function readDistance(unit: PingUnit, port: PinKit, maxCmDistance = 300): number {
+        /* Port? */
+        let echo, trig;
+        switch (port) {
+            case PinKit.Port1: echo = DigitalPin.P0; trig = DigitalPin.P1; break;
+            case PinKit.Port2: echo = DigitalPin.P2; trig = DigitalPin.P8; break;
+        }
+            
         /* Send pulse */
         pins.setPull(trig, PinPullMode.PullNone);
         pins.digitalWritePin(trig, 0);  // Clears the TriggerPin condition
@@ -726,7 +740,7 @@ namespace ds3231 {
 
     /* --------------------------------------------------------------------- */
 
-    const DS3231_I2C_ADDR = 0x68;
+    const DS3231_I2C_ADDR = 0x68; // Fixed I2C address
 
     const DS3231_REG_SECOND = 0x00;
     const DS3231_REG_MINUTE = 0x01;
@@ -1143,515 +1157,515 @@ namespace ds3231 {
 /*                          MODULE DRIVER MOTOR I2C                          */
 /* ------------------------------------------------------------------------- */
 
-//! pxt-driver
+// //! pxt-driver
 
-//% color="#FEBC68" weight=4 icon="\uf018" block="MKE-M10"
-//% groups="['Control Motor DC', 'Control Servo', 'GO', 'CROSS', 'TURN', 'STOP', 'MEASURE']"
-namespace driver {
-    export enum Address {
-        //% block="0x40 (64)"
-        add64 = 64,
-        //% block="0x41 (65)"
-        add65 = 65,
-        //% block="0x42 (66)"
-        add66 = 66,
-        //% block="0x43 (67)"
-        add67 = 67,
-        //% block="0x44 (68)"
-        add68 = 68
-        // //% block="0x45 (69)"
-        // add69 = 69
-    }
+// //% color="#FEBC68" weight=4 icon="\uf018" block="MKE-M10"
+// //% groups="['Control Motor DC', 'Control Servo', 'GO', 'CROSS', 'TURN', 'STOP', 'MEASURE']"
+// namespace driver {
+//     export enum Address {
+//         //% block="0x40 (64)"
+//         add64 = 64,
+//         //% block="0x41 (65)"
+//         add65 = 65,
+//         //% block="0x42 (66)"
+//         add66 = 66,
+//         //% block="0x43 (67)"
+//         add67 = 67,
+//         //% block="0x44 (68)"
+//         add68 = 68
+//         // //% block="0x45 (69)"
+//         // add69 = 69
+//     }
 
-    export enum Motor {
-        //% block="A"
-        MotorA = 0,
-        //% block="B"
-        MotorB = 1
-    }
+//     export enum Motor {
+//         //% block="A"
+//         MotorA = 0,
+//         //% block="B"
+//         MotorB = 1
+//     }
 
-    /**
-     * CW:  channel A & B (+) = VIN
-     *      channel A & B (-) = GND
-     * 
-     * CCW: channel A & B (-) = VIN
-     *      channel A & B (+) = GND
-     */
-    export enum Rotate {
-        //% block="CW"
-        Clockwise = 1,
-        //% block="CCW"
-        CounterClockwise = 0
-    }
+//     /**
+//      * CW:  channel A & B (+) = VIN
+//      *      channel A & B (-) = GND
+//      * 
+//      * CCW: channel A & B (-) = VIN
+//      *      channel A & B (+) = GND
+//      */
+//     export enum Rotate {
+//         //% block="CW"
+//         Clockwise = 1,
+//         //% block="CCW"
+//         CounterClockwise = 0
+//     }
 
-    export enum Pause {
-        //% block="BRAKE (stop now)"
-        Brake = 1,
-        //% block="STOP (release)"
-        Stop = 0
-    }
+//     export enum Pause {
+//         //% block="BRAKE (stop now)"
+//         Brake = 1,
+//         //% block="STOP (release)"
+//         Stop = 0
+//     }
 
-    export enum Servo {
-        //% block="S1"
-        Servo1 = 0,
-        //% block="S2"
-        Servo2 = 1
-    }
+//     export enum Servo {
+//         //% block="S1"
+//         Servo1 = 0,
+//         //% block="S2"
+//         Servo2 = 1
+//     }
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /**
-     * Pulse range information of each servo:
-     * 
-     * [0]  pulseMin    : Default 460. Range from 400 to 1,000
-     * [1]  pulseMax    : Default 2,350. Range from 2,000 to 2,600
-     */
-    const infoRC_1: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
-    const infoRC_2: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
+//     /**
+//      * Pulse range information of each servo:
+//      * 
+//      * [0]  pulseMin    : Default 460. Range from 400 to 1,000
+//      * [1]  pulseMax    : Default 2,350. Range from 2,000 to 2,600
+//      */
+//     const infoRC_1: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
+//     const infoRC_2: number[] = [460, 2350, 460, 2350, 460, 2350, 460, 2350, 460, 2350];
 
-    const _initOneTime: boolean[] = [false, false, false, false, false];
+//     const _initOneTime: boolean[] = [false, false, false, false, false];
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /**
-     * Driver initialization
-     * 
-     * First time initialization, remember to turn off all Motor and Servo
-     */
-    export function initDriver(addr: number) {
-        let buf = pins.createBuffer(6);
+//     /**
+//      * Driver initialization
+//      * 
+//      * First time initialization, remember to turn off all Motor and Servo
+//      */
+//     export function initDriver(addr: number) {
+//         let buf = pins.createBuffer(6);
 
-        /* Pause Motor B */
-        buf[0] = addr;
-        buf[1] = 1; // modeId = DC_ID (1)
-        buf[2] = 1; // index  = MotorB (1)
-        buf[3] = 0; // pwm    = PWM (0)
-        buf[4] = 0; // dir    = CCW (0)
-        buf[5] = (buf[0] + 2) % 256;
-        pins.i2cWriteBuffer(addr, buf);
-        control.waitMicros(15);
+//         /* Pause Motor B */
+//         buf[0] = addr;
+//         buf[1] = 1; // modeId = DC_ID (1)
+//         buf[2] = 1; // index  = MotorB (1)
+//         buf[3] = 0; // pwm    = PWM (0)
+//         buf[4] = 0; // dir    = CCW (0)
+//         buf[5] = (buf[0] + 2) % 256;
+//         pins.i2cWriteBuffer(addr, buf);
+//         control.waitMicros(15);
 
-        /* Pause Motor A */
-        buf[0] = addr;
-        buf[1] = 1; // modeId = DC_ID (1)
-        buf[2] = 0; // index  = MotorA (0)
-        buf[3] = 0; // pwm    = PWM (0)
-        buf[4] = 0; // dir    = CCW (0)
-        buf[5] = (buf[0] + 1) % 256;
-        pins.i2cWriteBuffer(addr, buf);
-        control.waitMicros(15);
+//         /* Pause Motor A */
+//         buf[0] = addr;
+//         buf[1] = 1; // modeId = DC_ID (1)
+//         buf[2] = 0; // index  = MotorA (0)
+//         buf[3] = 0; // pwm    = PWM (0)
+//         buf[4] = 0; // dir    = CCW (0)
+//         buf[5] = (buf[0] + 1) % 256;
+//         pins.i2cWriteBuffer(addr, buf);
+//         control.waitMicros(15);
 
-        /* Release Servo 2 */
-        buf[0] = addr;
-        buf[1] = 0;     // modeId = RC_ID (0)
-        buf[2] = 2;     // index  = Servo2 (2)
-        buf[3] = 11;    // pulse_H (0x0B)
-        buf[4] = 184;   // pulse_L (0xB8)
-        buf[5] = (buf[0] + 197) % 256;
-        pins.i2cWriteBuffer(addr, buf);
-        control.waitMicros(15);
+//         /* Release Servo 2 */
+//         buf[0] = addr;
+//         buf[1] = 0;     // modeId = RC_ID (0)
+//         buf[2] = 2;     // index  = Servo2 (2)
+//         buf[3] = 11;    // pulse_H (0x0B)
+//         buf[4] = 184;   // pulse_L (0xB8)
+//         buf[5] = (buf[0] + 197) % 256;
+//         pins.i2cWriteBuffer(addr, buf);
+//         control.waitMicros(15);
 
-        /* Release Servo 1 */
-        buf[0] = addr;
-        buf[1] = 0;     // modeId = RC_ID (0)
-        buf[2] = 1;     // index  = Servo1 (1)
-        buf[3] = 11;    // pulse_H (0x0B)
-        buf[4] = 184;   // pulse_L (0xB8)
-        buf[5] = (buf[0] + 196) % 256;
-        control.waitMicros(15);
-    }
+//         /* Release Servo 1 */
+//         buf[0] = addr;
+//         buf[1] = 0;     // modeId = RC_ID (0)
+//         buf[2] = 1;     // index  = Servo1 (1)
+//         buf[3] = 11;    // pulse_H (0x0B)
+//         buf[4] = 184;   // pulse_L (0xB8)
+//         buf[5] = (buf[0] + 196) % 256;
+//         control.waitMicros(15);
+//     }
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /**
-     * Control DC motor with parameters: speed & direction of rotation
-     * @param addr is I2C address for Driver
-     * @param motor choose motor A or motor B
-     * @param rotate set the motor rotation direction
-     * @param speed set the rotational speed of the motor
-     */
-    //% block="Driver address $addr \\| Control motor $motor rotation $rotate with speed $speed in (1\\% - 100\\%)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% motor.defl=Motor.MotorA
-    //% rotate.defl=Rotate.Clockwise
-    //% speed.defl=50 speed.min=1 speed.max=100
-    //% inlineInputMode=inline
-    //% weight=5
-    //% group="Control Motor DC"
-    export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
-        /* Make sure to initialize each Driver once */
-        if (!_initOneTime[addr - 64]) {
-            initDriver(addr);
-            _initOneTime[addr - 64] = true;
-        }
+//     /**
+//      * Control DC motor with parameters: speed & direction of rotation
+//      * @param addr is I2C address for Driver
+//      * @param motor choose motor A or motor B
+//      * @param rotate set the motor rotation direction
+//      * @param speed set the rotational speed of the motor
+//      */
+//     //% block="Driver address $addr \\| Control motor $motor rotation $rotate with speed $speed in (1\\% - 100\\%)"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% motor.defl=Motor.MotorA
+//     //% rotate.defl=Rotate.Clockwise
+//     //% speed.defl=50 speed.min=1 speed.max=100
+//     //% inlineInputMode=inline
+//     //% weight=5
+//     //% group="Control Motor DC"
+//     export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
+//         /* Make sure to initialize each Driver once */
+//         if (!_initOneTime[addr - 64]) {
+//             initDriver(addr);
+//             _initOneTime[addr - 64] = true;
+//         }
 
-        /**
-         * Data frame for Motor DC:
-         * 
-         * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
-         * [1]  modeId       (1 Byte)   = DC_ID (1)
-         * [2]  index        (1 Byte)   = MotorA (0) & MotorB (1)
-         * [3]  pwm          (1 Byte)   = PWM [0 - 255]
-         * [4]  dir          (1 Byte)   = CW (1) & CCW (0)
-         * [5]  checkSum     (1 Byte)
-         */
-        let buf = pins.createBuffer(6);
+//         /**
+//          * Data frame for Motor DC:
+//          * 
+//          * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
+//          * [1]  modeId       (1 Byte)   = DC_ID (1)
+//          * [2]  index        (1 Byte)   = MotorA (0) & MotorB (1)
+//          * [3]  pwm          (1 Byte)   = PWM [0 - 255]
+//          * [4]  dir          (1 Byte)   = CW (1) & CCW (0)
+//          * [5]  checkSum     (1 Byte)
+//          */
+//         let buf = pins.createBuffer(6);
 
-        /* ----------------------------------------------------------------- */
+//         /* ----------------------------------------------------------------- */
 
-        /**
-         * Convert (%) scale to (PWM) scale
-         * 
-         * (%) - 0   (PWM) - 0
-         * ------- = ---------
-         * 100 - 0    255 - 0
-         */
-        buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
-        switch (motor) {
-            case Motor.MotorA: {
-                buf[1] = 1; // modeId = DC_ID (1)
-                buf[2] = 0; // index  = MotorA (0)
-                break;
-            }
-            case Motor.MotorB: {
-                buf[1] = 1; // modeId = DC_ID (1)
-                buf[2] = 1; // index  = MotorB (1)
-                break;
-            }
-        }
-        buf[3] = Math.round(2.55 * speed);                              // pwm = PWM [0 - 255]
-        buf[4] = rotate;                                                // dir = CW (1) & CCW (0)
-        buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
+//         /**
+//          * Convert (%) scale to (PWM) scale
+//          * 
+//          * (%) - 0   (PWM) - 0
+//          * ------- = ---------
+//          * 100 - 0    255 - 0
+//          */
+//         buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
+//         switch (motor) {
+//             case Motor.MotorA: {
+//                 buf[1] = 1; // modeId = DC_ID (1)
+//                 buf[2] = 0; // index  = MotorA (0)
+//                 break;
+//             }
+//             case Motor.MotorB: {
+//                 buf[1] = 1; // modeId = DC_ID (1)
+//                 buf[2] = 1; // index  = MotorB (1)
+//                 break;
+//             }
+//         }
+//         buf[3] = Math.round(2.55 * speed);                              // pwm = PWM [0 - 255]
+//         buf[4] = rotate;                                                // dir = CW (1) & CCW (0)
+//         buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
 
-        /* ----------------------------------------------------------------- */
+//         /* ----------------------------------------------------------------- */
 
-        //! Use for Debug
-        // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
-        // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
-        // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
-        // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
-        // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
-        // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
+//         //! Use for Debug
+//         // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
+//         // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
+//         // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
+//         // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
+//         // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
+//         // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
 
-        pins.i2cWriteBuffer(addr, buf);
-        control.waitMicros(15);
-    }
+//         pins.i2cWriteBuffer(addr, buf);
+//         control.waitMicros(15);
+//     }
 
-    /**
-     * Make the engine stop immediately, or release
-     * @param addr is I2C address for Driver
-     * @param pause make Brake or Stop motor
-     * @param motor choose motor A or motor B
-     */
-    //% block="Driver address $addr \\| $pause motor $motor"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% pause.defl=Pause.Brake
-    //% motor.defl=Motor.MotorA
-    //% inlineInputMode=inline
-    //% weight=4
-    //% group="Control Motor DC"
-    export function pauseMotor(addr: Address, pause: Pause, motor: Motor) {
-        switch (pause) {
-            case Pause.Brake: {
-                controlMotor(addr, motor, Rotate.Clockwise, 0);
-                break;
-            }
-            case Pause.Stop: {
-                controlMotor(addr, motor, Rotate.CounterClockwise, 0);
-                break;
-            }
-        }
-    }
+//     /**
+//      * Make the engine stop immediately, or release
+//      * @param addr is I2C address for Driver
+//      * @param pause make Brake or Stop motor
+//      * @param motor choose motor A or motor B
+//      */
+//     //% block="Driver address $addr \\| $pause motor $motor"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% pause.defl=Pause.Brake
+//     //% motor.defl=Motor.MotorA
+//     //% inlineInputMode=inline
+//     //% weight=4
+//     //% group="Control Motor DC"
+//     export function pauseMotor(addr: Address, pause: Pause, motor: Motor) {
+//         switch (pause) {
+//             case Pause.Brake: {
+//                 controlMotor(addr, motor, Rotate.Clockwise, 0);
+//                 break;
+//             }
+//             case Pause.Stop: {
+//                 controlMotor(addr, motor, Rotate.CounterClockwise, 0);
+//                 break;
+//             }
+//         }
+//     }
 
-    /**
-     * Control RC motor (Servo) with parameter: angle
-     * @param addr is I2C address for Driver
-     * @param servo choose Servo 1 or Servo 2
-     * @param angle set the rotation angle of Servo
-     */
-    //% block="Driver address $addr \\| Control servo $servo with angle $angle in (0° - 180°)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% servo.defl=Servo.Servo1
-    //% angle.shadow="protractorPicker"
-    //% inlineInputMode=inline
-    //% weight=3
-    //% group="Control Servo"
-    export function controlServo(addr: Address, servo: Servo, angle: number) {
-        /* Make sure to initialize each Driver once */
-        if (!_initOneTime[addr - 64]) {
-            initDriver(addr);
-            _initOneTime[addr - 64] = true;
-        }
+//     /**
+//      * Control RC motor (Servo) with parameter: angle
+//      * @param addr is I2C address for Driver
+//      * @param servo choose Servo 1 or Servo 2
+//      * @param angle set the rotation angle of Servo
+//      */
+//     //% block="Driver address $addr \\| Control servo $servo with angle $angle in (0° - 180°)"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% servo.defl=Servo.Servo1
+//     //% angle.shadow="protractorPicker"
+//     //% inlineInputMode=inline
+//     //% weight=3
+//     //% group="Control Servo"
+//     export function controlServo(addr: Address, servo: Servo, angle: number) {
+//         /* Make sure to initialize each Driver once */
+//         if (!_initOneTime[addr - 64]) {
+//             initDriver(addr);
+//             _initOneTime[addr - 64] = true;
+//         }
 
-        /**
-         * Data frame for Motor RC (Servo):
-         * 
-         * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
-         * [1]  modeId       (1 Byte)   = RC_ID (0)
-         * [2]  index        (1 Byte)   = Servo1 (1) & Servo2 (2)
-         * [3]  pulse_H      (1 Byte)   = | PPM [minPulse - maxPulse]
-         * [4]  pulse_L      (1 Byte)     |
-         * [5]  checkSum     (1 Byte)
-         */
-        let pulse: number;
-        let buf = pins.createBuffer(6);
+//         /**
+//          * Data frame for Motor RC (Servo):
+//          * 
+//          * [0]  addressId    (1 Byte)   = Address (64, 65, 66, 67, 68)
+//          * [1]  modeId       (1 Byte)   = RC_ID (0)
+//          * [2]  index        (1 Byte)   = Servo1 (1) & Servo2 (2)
+//          * [3]  pulse_H      (1 Byte)   = | PPM [minPulse - maxPulse]
+//          * [4]  pulse_L      (1 Byte)     |
+//          * [5]  checkSum     (1 Byte)
+//          */
+//         let pulse: number;
+//         let buf = pins.createBuffer(6);
 
-        /* ----------------------------------------------------------------- */
+//         /* ----------------------------------------------------------------- */
 
-        /**
-         * Convert (Angle) scale to (Pulse) scale
-         * 
-         * (Angle) - 0    (Pulse) - minPulse
-         * ----------- = -------------------
-         *   180 - 0     maxPulse - minPulse
-         */
-        buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
-        switch (servo) {
-            case Servo.Servo1: {
-                pulse = (angle * (infoRC_1[(addr - 64) * 2 + 1] - infoRC_1[(addr - 64) * 2]) / 180) + infoRC_1[0];
-                buf[1] = 0; // modeId = RC_ID (0)
-                buf[2] = 1; // index  = Servo1 (1)
-                break;
-            }
-            case Servo.Servo2: {
-                pulse = (angle * (infoRC_2[(addr - 64) * 2 + 1] - infoRC_2[(addr - 64) * 2]) / 180) + infoRC_2[0];
-                buf[1] = 0; // modeId = RC_ID (0)
-                buf[2] = 2; // index  = Servo2 (2)
-                break;
-            }
-        }
-        buf[3] = Math.idiv(pulse, 256);                                 // pulse_H
-        buf[4] = pulse % 256;                                           // pulse_L
-        buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
+//         /**
+//          * Convert (Angle) scale to (Pulse) scale
+//          * 
+//          * (Angle) - 0    (Pulse) - minPulse
+//          * ----------- = -------------------
+//          *   180 - 0     maxPulse - minPulse
+//          */
+//         buf[0] = addr;      // addressId = Address (64, 65, 66, 67, 68)
+//         switch (servo) {
+//             case Servo.Servo1: {
+//                 pulse = (angle * (infoRC_1[(addr - 64) * 2 + 1] - infoRC_1[(addr - 64) * 2]) / 180) + infoRC_1[0];
+//                 buf[1] = 0; // modeId = RC_ID (0)
+//                 buf[2] = 1; // index  = Servo1 (1)
+//                 break;
+//             }
+//             case Servo.Servo2: {
+//                 pulse = (angle * (infoRC_2[(addr - 64) * 2 + 1] - infoRC_2[(addr - 64) * 2]) / 180) + infoRC_2[0];
+//                 buf[1] = 0; // modeId = RC_ID (0)
+//                 buf[2] = 2; // index  = Servo2 (2)
+//                 break;
+//             }
+//         }
+//         buf[3] = Math.idiv(pulse, 256);                                 // pulse_H
+//         buf[4] = pulse % 256;                                           // pulse_L
+//         buf[5] = (buf[0] + buf[1] + buf[2] + buf[3] + buf[4]) % 256;    //! checkSum
 
-        /* ----------------------------------------------------------------- */
+//         /* ----------------------------------------------------------------- */
 
-        //! Use for Debug
-        // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
-        // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
-        // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
-        // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
-        // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
-        // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
+//         //! Use for Debug
+//         // serial.writeNumber(buf[0]); serial.writeLine(" [0]");
+//         // serial.writeNumber(buf[1]); serial.writeLine(" [1]");
+//         // serial.writeNumber(buf[2]); serial.writeLine(" [2]");
+//         // serial.writeNumber(buf[3]); serial.writeLine(" [3]");
+//         // serial.writeNumber(buf[4]); serial.writeLine(" [4]");
+//         // serial.writeNumber(buf[5]); serial.writeLine(" [5]");
 
-        pins.i2cWriteBuffer(addr, buf);
-        control.waitMicros(15);
-    }
+//         pins.i2cWriteBuffer(addr, buf);
+//         control.waitMicros(15);
+//     }
 
-    /**
-     * Set the PPW pulse range for Servo
-     * @param addr is I2C address for Driver
-     * @param servo choose Servo 1 or Servo 2
-     * @param minPulse set the PPM pulse to the minimum allowed width
-     * @param maxPulse set the PPM pulse to the maximum allowed width
-     */
-    //% block="Driver address $addr \\| Set range the pulse for servo $servo from $minPulse (Min) to $maxPulse (Max)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% servo.defl=Servo.Servo1
-    //% minPulse.defl=460 minPulse.min=400 minPulse.max=1000
-    //% maxPulse.defl=2350 maxPulse.min=2000 maxPulse.max=2600
-    //% inlineInputMode=inline
-    //% weight=2
-    //% group="Control Servo"
-    export function setRangeServo(addr: Address, servo: Servo, minPulse: number, maxPulse: number) {
-        switch (servo) {
-            case Servo.Servo1: {
-                infoRC_1[(addr - 64) * 2] = minPulse;
-                infoRC_1[(addr - 64) * 2 + 1] = maxPulse;
-                break;
-            }
-            case Servo.Servo2: {
-                infoRC_2[(addr - 64) * 2] = minPulse;
-                infoRC_2[(addr - 64) * 2 + 1] = maxPulse;
-                break;
-            }
-        }
-    }
+//     /**
+//      * Set the PPW pulse range for Servo
+//      * @param addr is I2C address for Driver
+//      * @param servo choose Servo 1 or Servo 2
+//      * @param minPulse set the PPM pulse to the minimum allowed width
+//      * @param maxPulse set the PPM pulse to the maximum allowed width
+//      */
+//     //% block="Driver address $addr \\| Set range the pulse for servo $servo from $minPulse (Min) to $maxPulse (Max)"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% servo.defl=Servo.Servo1
+//     //% minPulse.defl=460 minPulse.min=400 minPulse.max=1000
+//     //% maxPulse.defl=2350 maxPulse.min=2000 maxPulse.max=2600
+//     //% inlineInputMode=inline
+//     //% weight=2
+//     //% group="Control Servo"
+//     export function setRangeServo(addr: Address, servo: Servo, minPulse: number, maxPulse: number) {
+//         switch (servo) {
+//             case Servo.Servo1: {
+//                 infoRC_1[(addr - 64) * 2] = minPulse;
+//                 infoRC_1[(addr - 64) * 2 + 1] = maxPulse;
+//                 break;
+//             }
+//             case Servo.Servo2: {
+//                 infoRC_2[(addr - 64) * 2] = minPulse;
+//                 infoRC_2[(addr - 64) * 2 + 1] = maxPulse;
+//                 break;
+//             }
+//         }
+//     }
 
-    /**
-     * Release Servo
-     * @param addr is I2C address for Driver
-     */
-    //% block="Driver address $addr \\| Release servo $servo"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% servo.defl=Servo.Servo1
-    //% inlineInputMode=inline
-    //% weight=1
-    //% group="Control Servo"
-    export function releaseServo(addr: Address, servo: Servo) {
-        controlServo(addr, servo, 3000);
-    }
+//     /**
+//      * Release Servo
+//      * @param addr is I2C address for Driver
+//      */
+//     //% block="Driver address $addr \\| Release servo $servo"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% servo.defl=Servo.Servo1
+//     //% inlineInputMode=inline
+//     //% weight=1
+//     //% group="Control Servo"
+//     export function releaseServo(addr: Address, servo: Servo) {
+//         controlServo(addr, servo, 3000);
+//     }
 
-    /* --------------------------------------------------------------------- */
+//     /* --------------------------------------------------------------------- */
 
-    /**
-     * Control car go forward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 go forward [🡹] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=10
-    //% group="GO"
-    export function goForward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
-    }
+//     /**
+//      * Control car go forward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 go forward [🡹] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=10
+//     //% group="GO"
+//     export function goForward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+//     }
 
-    /**
-     * Control car go backward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 go backward [🡻] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=9
-    //% group="GO"
-    export function goBackward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
-    }
+//     /**
+//      * Control car go backward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 go backward [🡻] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=9
+//     //% group="GO"
+//     export function goBackward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+//     }
 
-    /**
-     * Control car cross 'left' forward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 cross 'left' forward [🡼] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=8
-    //% group="CROSS"
-    export function crossLeftForward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
-        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
-    }
+//     /**
+//      * Control car cross 'left' forward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 cross 'left' forward [🡼] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=8
+//     //% group="CROSS"
+//     export function crossLeftForward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
+//         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+//     }
 
-    /**
-     * Control car cross 'right' forward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 cross 'right' forward [🡽] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=7
-    //% group="CROSS"
-    export function crossRightForward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
-    }
+//     /**
+//      * Control car cross 'right' forward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 cross 'right' forward [🡽] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=7
+//     //% group="CROSS"
+//     export function crossRightForward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
+//     }
 
-    /**
-     * Control car cross 'left' backward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 cross 'left' backward [🡿] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=6
-    //% group="CROSS"
-    export function crossLeftBackward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
-        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
-    }
+//     /**
+//      * Control car cross 'left' backward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 cross 'left' backward [🡿] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=6
+//     //% group="CROSS"
+//     export function crossLeftBackward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.Clockwise, 0);
+//         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+//     }
 
-    /**
-     * Control car cross 'right' backward
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 cross 'right' backward [🡾] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=5
-    //% group="CROSS"
-    export function crossRightBackward(speed: number, addr: Address) {
-        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
-    }
+//     /**
+//      * Control car cross 'right' backward
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 cross 'right' backward [🡾] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=5
+//     //% group="CROSS"
+//     export function crossRightBackward(speed: number, addr: Address) {
+//         controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, 0);
+//     }
 
-    /**
-     * Control car turn 'left'
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 turn 'left' [🡸] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=4
-    //% group="TURN"
-    export function turnLeft(speed: number, addr: Address) {
-        /* ↺↺↺ : <== */
-        controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
-    }
+//     /**
+//      * Control car turn 'left'
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 turn 'left' [🡸] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=4
+//     //% group="TURN"
+//     export function turnLeft(speed: number, addr: Address) {
+//         /* ↺↺↺ : <== */
+//         controlMotor(addr, Motor.MotorB, Rotate.CounterClockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.Clockwise, speed);
+//     }
 
-    /**
-     * Control car turn 'right'
-     * @param speed set the rotational speed of the motor
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 turn 'right' [🡺] at speed $speed \\| Driver address $addr"
-    //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=3
-    //% group="TURN"
-    export function turnRight(speed: number, addr: Address) {
-        /* ↻↻↻ : ==> */
-        controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
-        controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
-    }
+//     /**
+//      * Control car turn 'right'
+//      * @param speed set the rotational speed of the motor
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 turn 'right' [🡺] at speed $speed \\| Driver address $addr"
+//     //% speed.defl=90 speed.min=1 speed.max=100
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=3
+//     //% group="TURN"
+//     export function turnRight(speed: number, addr: Address) {
+//         /* ↻↻↻ : ==> */
+//         controlMotor(addr, Motor.MotorB, Rotate.Clockwise, speed);
+//         controlMotor(addr, Motor.MotorA, Rotate.CounterClockwise, speed);
+//     }
 
-    /**
-     * Control car stop now
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 stop now (Brakes) 🛑 \\| Driver address $addr"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=2
-    //% group="STOP"
-    export function brake(addr: Address) {
-        pauseMotor(addr, Pause.Brake, Motor.MotorB);
-        pauseMotor(addr, Pause.Brake, Motor.MotorA);
-    }
+//     /**
+//      * Control car stop now
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 stop now (Brakes) 🛑 \\| Driver address $addr"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=2
+//     //% group="STOP"
+//     export function brake(addr: Address) {
+//         pauseMotor(addr, Pause.Brake, Motor.MotorB);
+//         pauseMotor(addr, Pause.Brake, Motor.MotorA);
+//     }
 
-    /**
-     * Stop driving the car
-     * @param addr is I2C address for Driver
-     */
-    //% advanced=true
-    //% block="🚗 release (Slip) ⚠️ \\| Driver address $addr"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% inlineInputMode=inline
-    //% weight=1
-    //% group="STOP"
-    export function stop(addr: Address) {
-        pauseMotor(addr, Pause.Stop, Motor.MotorB);
-        pauseMotor(addr, Pause.Stop, Motor.MotorA);
-    }
-}
+//     /**
+//      * Stop driving the car
+//      * @param addr is I2C address for Driver
+//      */
+//     //% advanced=true
+//     //% block="🚗 release (Slip) ⚠️ \\| Driver address $addr"
+//     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+//     //% inlineInputMode=inline
+//     //% weight=1
+//     //% group="STOP"
+//     export function stop(addr: Address) {
+//         pauseMotor(addr, Pause.Stop, Motor.MotorB);
+//         pauseMotor(addr, Pause.Stop, Motor.MotorA);
+//     }
+// }
 
 /* ------------------------------------------------------------------------- */
 /*                             MODULE MP3 PLAYER                             */
@@ -1747,10 +1761,10 @@ namespace mp3Player {
          * rate : the baud rate for transmitting and receiving data
          * 
          * MP3Player <----> MicroBit
-         * RX               P14 (old) / P8  (new) (TX)
-         * TX               P15 (old) / P16 (new) (RX)
+         * RX               P14 (old) / P2 (new) (TX)
+         * TX               P15 (old) / P8 (new) (RX)
          */
-        serial.redirect(SerialPin.P8, SerialPin.P16, BaudRate.BaudRate9600);
+        serial.redirect(SerialPin.P2, SerialPin.P8, BaudRate.BaudRate9600);
     }
 
     /* Calculate Checksum */
@@ -2064,7 +2078,7 @@ namespace mp3Player {
     /**
      * Perform volume up
      */
-    //% block="MP3 Player P8+P16 port \\| Up volume"
+    //% block="MP3 Player P2+P8 port \\| Up volume"
     //% inlineInputMode=inline
     //% weight=13
     //% group="Setting"
@@ -2078,7 +2092,7 @@ namespace mp3Player {
     /**
      * Perform volume down
      */
-    //% block="MP3 Player P8+P16 port \\| Down volume"
+    //% block="MP3 Player P2+P8 port \\| Down volume"
     //% inlineInputMode=inline
     //% weight=12
     //% group="Setting"
@@ -2093,7 +2107,7 @@ namespace mp3Player {
      * Perform volume adjustment
      * @param volume select sound level from 0 to 30
      */
-    //% block="MP3 Player P8+P16 port \\| Set volume level $volume"
+    //% block="MP3 Player P2+P8 port \\| Set volume level $volume"
     //% volume.defl=20 volume.min=0 volume.max=30
     //% inlineInputMode=inline
     //% weight=11
@@ -2109,7 +2123,7 @@ namespace mp3Player {
      * Adjust the EQ of the sound
      * @param chooseEQ select EQ format
      */
-    //% block="MP3 Player P8+P16 port \\| Set EQ $chooseEQ"
+    //% block="MP3 Player P2+P8 port \\| Set EQ $chooseEQ"
     //% chooseEQ.defl=EQ.Normal
     //% inlineInputMode=inline
     //% weight=10
@@ -2125,7 +2139,7 @@ namespace mp3Player {
      * Play the music file of your choice
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player P8+P16 port \\| Play file number $file"
+    //% block="MP3 Player P2+P8 port \\| Play file number $file"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=9
@@ -2144,7 +2158,7 @@ namespace mp3Player {
      * Play the next or previous music file compared to the current music file
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player P8+P16 port \\| Play $playWhat"
+    //% block="MP3 Player P2+P8 port \\| Play $playWhat"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=8
@@ -2162,7 +2176,7 @@ namespace mp3Player {
     /**
      * Pause the currently playing file
      */
-    //% block="MP3 Player P8+P16 port \\| Pause"
+    //% block="MP3 Player P2+P8 port \\| Pause"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Control"
@@ -2176,7 +2190,7 @@ namespace mp3Player {
     /**
      * Play continues with paused file music
      */
-    //% block="MP3 Player P8+P16 port \\| Start (Play continues)"
+    //% block="MP3 Player P2+P8 port \\| Start (Play continues)"
     //% inlineInputMode=inline
     //% weight=6
     //% group="Control"
@@ -2190,7 +2204,7 @@ namespace mp3Player {
     /**
      * Get the parameters being set in MP3 Player
      */
-    //% block="MP3 Player P8+P16 port \\| Read information setting current"
+    //% block="MP3 Player P2+P8 port \\| Read information setting current"
     //% inlineInputMode=inline
     //% weight=5
     //% group="Get Info"
@@ -2203,7 +2217,7 @@ namespace mp3Player {
      * @param file select the music file you want to play
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player P8+P16 port \\| Play file number $file in $second seconds"
+    //% block="MP3 Player P2+P8 port \\| Play file number $file in $second seconds"
     //% file.defl=1 file.min=0 file.max=65535
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -2220,7 +2234,7 @@ namespace mp3Player {
      * Play the music file of your choice until the song is over
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player P8+P16 port \\| Play file number $file until done"
+    //% block="MP3 Player P2+P8 port \\| Play file number $file until done"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=3
@@ -2241,7 +2255,7 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player P8+P16 port \\| Play $playWhat in $second seconds"
+    //% block="MP3 Player P2+P8 port \\| Play $playWhat in $second seconds"
     //% playWhat.defl=PlayWhat.Next
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -2258,7 +2272,7 @@ namespace mp3Player {
      * Play next or previous music file until the song is over
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player P8+P16 port \\| Play $playWhat until done"
+    //% block="MP3 Player P2+P8 port \\| Play $playWhat until done"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=1
@@ -2960,3 +2974,22 @@ namespace ir1838 {
 //         return status;
 //     }
 // }
+
+/* ------------------------------------------------------------------------- */
+/*                                 LIST PORT                                 */
+/* ------------------------------------------------------------------------- */
+
+/*
+** SERVO (3 PIN)                : P0 , P12
+**
+** MOTOR A                      : P13 , P14
+** MOTOR B                      : P15 , P16
+**
+** I2C (4PIN)                   : P19 , P20
+**
+** UART (4 PIN)                 : P2+P8
+** PORT 4 PIN                   : P0+P1 , P2+P8
+**
+** PORT 3 PIN (ANALOG - TOUCH)  : P0 , P1 , P2
+** PORT 3 PIN (DIGITAL)         : P13 , P14 , P15
+*/

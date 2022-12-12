@@ -1,0 +1,36 @@
+=== All about Micro:bit ===========================================================================
+
+# Pin P12 (Reserved - Accessibility) ------------
+
+	P12: Reserved For Accessbility
+	-> https://microbit.pinout.xyz/pin-p12-accessibility-.html
+
+# Servo -----------------------------------------
+
+	Servo Write Pin
+	-> https://makecode.microbit.org/reference/pins/servo-write-pin
+	|
+	. Không thể dùng với các pin P5 (btnA) và P11 (btnB)
+	|
+	. Dùng được với các pin		Analog: P0, P1, P2
+	.				SPI: P13, P14, P15
+	.				Digital: P8, P9, P16
+	.				Kể cả pin P12 (Reserved - Accessibility)
+	.				LED: P3, P4, P6, P7, P10 ! nhưng sẽ làm hiển thị Led
+
+# Analog ----------------------------------------
+
+# Digital ---------------------------------------
+
+===================================================================================================
+
+KO SỬ DỤNG CÁC PIN:	. NÚT NHẤN	P5, P11
+			. LED		P3, P4, P6, P7, P10
+			. I2C		P19, P20
+
+CÁC PIN CÒN LẠI CÓ THỂ SỬ DỤNG ĐƯỢC:	. DIGITAL	P8, P9, P16
+					. ANALOG	P0, P1, P2
+					. SPI		P13, P14, P15
+					. ?		P12
+
+===================================================================================================
