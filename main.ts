@@ -307,7 +307,7 @@ namespace ds18b20 {
     /* --------------------------------------------------------------------- */
 
     //% shim=ds18b20::temperature
-    export function temperature(pin: DigitalPin): number {
+    export function temperature(sig: PinKit): number {
         return 999;
     }
 
