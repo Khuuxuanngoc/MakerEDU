@@ -16,7 +16,7 @@ namespace ultraSonic {
     export enum PinKit {
         //% block="P0+P1"
         Port1,
-        //% block="P2+P8"
+        //% block="P2+P8 (UART)"
         Port2
     }
 
@@ -28,10 +28,11 @@ namespace ultraSonic {
      * @param port select 4-pin port
      * @param maxCmDistance maximum distance in centimeters (default is 300 cm)
      */
-    //% block="UltraSonic \\| Read distance $unit from $port port"
+    //% block="UltraSonic || Read distance $unit from $port port"
     //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
     //% unit.defl=PingUnit.Centimeters
     //% inlineInputMode=inline
+    //% expandableArgumentMode="toggle"
     export function readDistance(unit: PingUnit, port: PinKit, maxCmDistance = 300): number {
         /* Port? */
         let echo, trig;
@@ -240,10 +241,11 @@ namespace dht11 {
      * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DHT11 \\| Read temperature from $sig port in degree $unit"
+    //% block="DHT11 || Read temperature from $sig port in degree $unit"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
+    //% expandableArgumentMode="toggle"
     //% weight=2
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
         let t = 0;
@@ -257,10 +259,11 @@ namespace dht11 {
      * Read ambient air humidity
      * @param sig signal pin (default P0)
      */
-    //% block="DHT11 \\| Read air humidity (\\%) from $sig port"
+    //% block="DHT11 || Read air humidity (\\%) from $sig port"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
+    //% expandableArgumentMode="toggle"
     //% weight=1
     export function readHumidity(sig: PinKit): number {
         let h = 0;
@@ -315,23 +318,13 @@ namespace ds18b20 {
      * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DS18B20 \\| Read temperature from $sig port in degree $unit"
+    //% block="DS18B20 || Read temperature from $sig port in degree $unit"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% unit.defl=TemperatureType.Celsius
     //% inlineInputMode=inline
+    //% expandableArgumentMode="toggle"
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
-        /* Port? */
-        let pin;
-        switch (sig) {
-            case PinKit.P0: pin = DigitalPin.P0; break;
-            case PinKit.P1: pin = DigitalPin.P1; break;
-            case PinKit.P2: pin = DigitalPin.P2; break;
-            case PinKit.P13: pin = DigitalPin.P13; break;
-            case PinKit.P14: pin = DigitalPin.P14; break;
-            case PinKit.P15: pin = DigitalPin.P15; break;
-        }
-
-        let t = temperature(pin);
+        let t = temperature(sig);
         if (t == 999) {
             return 0;
         } else {
@@ -1550,7 +1543,7 @@ namespace mp3Player {
     /**
      * Perform volume up
      */
-    //% block="MP3 Player P2+P8 port \\| Up volume"
+    //% block="MP3 Player UART port \\| Up volume"
     //% inlineInputMode=inline
     //% weight=13
     //% group="Setting"
@@ -1564,7 +1557,7 @@ namespace mp3Player {
     /**
      * Perform volume down
      */
-    //% block="MP3 Player P2+P8 port \\| Down volume"
+    //% block="MP3 Player UART port \\| Down volume"
     //% inlineInputMode=inline
     //% weight=12
     //% group="Setting"
@@ -1579,7 +1572,7 @@ namespace mp3Player {
      * Perform volume adjustment
      * @param volume select sound level from 0 to 30
      */
-    //% block="MP3 Player P2+P8 port \\| Set volume level $volume"
+    //% block="MP3 Player UART port \\| Set volume level $volume"
     //% volume.defl=20 volume.min=0 volume.max=30
     //% inlineInputMode=inline
     //% weight=11
@@ -1595,7 +1588,7 @@ namespace mp3Player {
      * Adjust the EQ of the sound
      * @param chooseEQ select EQ format
      */
-    //% block="MP3 Player P2+P8 port \\| Set EQ $chooseEQ"
+    //% block="MP3 Player UART port \\| Set EQ $chooseEQ"
     //% chooseEQ.defl=EQ.Normal
     //% inlineInputMode=inline
     //% weight=10
@@ -1611,7 +1604,7 @@ namespace mp3Player {
      * Play the music file of your choice
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player P2+P8 port \\| Play file number $file"
+    //% block="MP3 Player UART port \\| Play file number $file"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=9
@@ -1630,7 +1623,7 @@ namespace mp3Player {
      * Play the next or previous music file compared to the current music file
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player P2+P8 port \\| Play $playWhat"
+    //% block="MP3 Player UART port \\| Play $playWhat"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=8
@@ -1648,7 +1641,7 @@ namespace mp3Player {
     /**
      * Pause the currently playing file
      */
-    //% block="MP3 Player P2+P8 port \\| Pause"
+    //% block="MP3 Player UART port \\| Pause"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Control"
@@ -1662,7 +1655,7 @@ namespace mp3Player {
     /**
      * Play continues with paused file music
      */
-    //% block="MP3 Player P2+P8 port \\| Start (Play continues)"
+    //% block="MP3 Player UART port \\| Start (Play continues)"
     //% inlineInputMode=inline
     //% weight=6
     //% group="Control"
@@ -1676,7 +1669,7 @@ namespace mp3Player {
     /**
      * Get the parameters being set in MP3 Player
      */
-    //% block="MP3 Player P2+P8 port \\| Read information setting current"
+    //% block="MP3 Player UART port \\| Read information setting current"
     //% inlineInputMode=inline
     //% weight=5
     //% group="Get Info"
@@ -1689,7 +1682,7 @@ namespace mp3Player {
      * @param file select the music file you want to play
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player P2+P8 port \\| Play file number $file in $second seconds"
+    //% block="MP3 Player UART port \\| Play file number $file in $second seconds"
     //% file.defl=1 file.min=0 file.max=65535
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -1706,7 +1699,7 @@ namespace mp3Player {
      * Play the music file of your choice until the song is over
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player P2+P8 port \\| Play file number $file until done"
+    //% block="MP3 Player UART port \\| Play file number $file until done"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=3
@@ -1727,7 +1720,7 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player P2+P8 port \\| Play $playWhat in $second seconds"
+    //% block="MP3 Player UART port \\| Play $playWhat in $second seconds"
     //% playWhat.defl=PlayWhat.Next
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -1744,7 +1737,7 @@ namespace mp3Player {
      * Play next or previous music file until the song is over
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player P2+P8 port \\| Play $playWhat until done"
+    //% block="MP3 Player UART port \\| Play $playWhat until done"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=1
