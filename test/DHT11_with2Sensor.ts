@@ -1,0 +1,11 @@
+lcd.clearScreen()
+lcd.displayText("Temp 1:", 1, 1)
+lcd.displayText("Humi 1:", 1, 2)
+lcd.displayText("Temp 2:", 1, 3)
+lcd.displayText("Humi 2:", 1, 4)
+basic.forever(function () {
+  lcd.displayText("" + dht11.readTemperature(dht11.TemperatureType.Celsius, dht11.PinKit.P2) + lcd.displaySymbol(lcd.Symbols.sym07) + "C   ", 9, 1)
+  lcd.displayText("" + dht11.readHumidity(dht11.PinKit.P2) + "%   ", 9, 2)
+  lcd.displayText("" + dht11.readTemperature(dht11.TemperatureType.Celsius, dht11.PinKit.P14) + lcd.displaySymbol(lcd.Symbols.sym07) + "C   ", 9, 3)
+  lcd.displayText("" + dht11.readHumidity(dht11.PinKit.P14) + "%   ", 9, 4)
+})

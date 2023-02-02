@@ -1,45 +1,150 @@
 /* ------------------------------------------------------------------------- */
-/*                             SENSOR ULTRASONIC                             */
+/*                                   DRIVER                                  */
 /* ------------------------------------------------------------------------- */
 
-//! pxt-ultraSonic
+//! pxt-l9110
 
-//% color="#41C0B5" weight=7 icon="\uf161" block="MKE-S01"
-namespace ultraSonic {
-    export enum PingUnit {
-        //% block="(cm)"
-        Centimeters,
-        //% block="(inches)"
-        Inches
+//% color="#FF9E9E" weight=8 icon="\uf018" block="Driver"
+namespace l9110 {
+    export enum Motor {
+        //% block="A"
+        MotorA = 0,
+        //% block="B"
+        MotorB = 1
     }
 
-    export enum PinKit {
-        //% block="P0+P1"
-        Port1,
-        //% block="P2+P8 (UART)"
-        Port2
+    export enum Rotate {
+        //% block="forward"
+        Forward = 0,
+        //% block="backward"
+        Backward = 1
     }
 
     /* --------------------------------------------------------------------- */
 
     /**
-     * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
-     * @param unit desired conversion unit
-     * @param port select 4-pin port
-     * @param maxCmDistance maximum distance in centimeters (default is 300 cm)
+     * At first time use
+     * Must stop all motors before use
+     * Only need one time 
      */
-    //% block="UltraSonic \\| Read distance $unit from $port port"
-    //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
-    //% unit.defl=PingUnit.Centimeters
-    //% inlineInputMode=external
-    export function readDistance(unit: PingUnit, port: PinKit, maxCmDistance = 300): number {
-        /* Port? */
-        let echo, trig;
-        switch (port) {
-            case PinKit.Port1: echo = DigitalPin.P0; trig = DigitalPin.P1; break;
-            case PinKit.Port2: echo = DigitalPin.P2; trig = DigitalPin.P8; break;
+    let _initOneTime = false;
+
+    /* --------------------------------------------------------------------- */
+
+    export function initDriver() {
+        if (!_initOneTime) {
+            pins.digitalWritePin(DigitalPin.P13, 0); // Channel B of Motor_A
+            pins.digitalWritePin(DigitalPin.P14, 0); // Channel A of Motor_A
+            pins.digitalWritePin(DigitalPin.P15, 0); // Channel B of Motor_B
+            pins.digitalWritePin(DigitalPin.P16, 0); // Channel A of Motor_B
+
+            _initOneTime = true;
         }
-            
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Control DC motor with parameters: speed & direction of rotation
+     * @param motor choose motor A or motor B
+     * @param rotate set the motor rotation direction
+     * @param speed set the rotational speed of the motor
+     */
+    //% block="Driver \\| Control motor $motor rotation $rotate with speed $speed \\%"
+    //% motor.defl=Motor.MotorA
+    //% rotate.defl=Rotate.Forward
+    //% speed.defl=50 speed.min=0 speed.max=100
+    //% inlineInputMode=inline
+    //% weight=2
+    export function controlMotor(motor: Motor, rotate: Rotate, speed: number) {
+        /* The first initialize, make Driver stop before do anything */
+        initDriver();
+
+        /* Convert (%) value to PWM value */
+        speed = pins.map(speed, 0, 100, 0, 1023);
+
+        switch (motor) {
+            case Motor.MotorA: {
+                if (rotate) { // Backward
+                    pins.digitalWritePin(DigitalPin.P14, 0);   // A+
+                    pins.analogWritePin(AnalogPin.P13, speed); // B-
+                }
+                else { // Forward
+                    pins.analogWritePin(AnalogPin.P14, speed); // A+
+                    pins.digitalWritePin(DigitalPin.P13, 0);   // B-
+                }
+                break;
+            }
+            case Motor.MotorB: {
+                if (rotate) { // Backward
+                    pins.digitalWritePin(DigitalPin.P16, 0);   // A+
+                    pins.analogWritePin(AnalogPin.P15, speed); // B-
+                }
+                else { // Forward
+                    pins.analogWritePin(AnalogPin.P16, speed); // A+
+                    pins.digitalWritePin(DigitalPin.P15, 0);   // B-
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * Make the engine stop
+     * @param motor choose motor A or motor B
+     */
+    //% block="Driver \\| Stop motor $motor"
+    //% motor.defl=Motor.MotorA
+    //% inlineInputMode=inline
+    //% weight=1
+    export function pauseMotor(motor: Motor) {
+        /* The first initialize, make Driver stop before do anything */
+        initDriver();
+
+        switch (motor) {
+            case Motor.MotorA: {
+                pins.digitalWritePin(DigitalPin.P14, 0); // A+
+                pins.digitalWritePin(DigitalPin.P13, 0); // B-
+                break;
+            }
+            case Motor.MotorB: {
+                pins.digitalWritePin(DigitalPin.P16, 0); // A+
+                pins.digitalWritePin(DigitalPin.P15, 0); // B-
+                break;
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/*                             SENSOR ULTRASONIC                             */
+/* ------------------------------------------------------------------------- */
+
+//! pxt-ultraSonic
+
+//% color="#41C0B5" weight=7 icon="\uf161" block="S01"
+namespace ultraSonic {
+    export enum PingUnit {
+        //% block="(cm)"
+        Centimeters = 0,
+        //% block="(inch)"
+        Inches = 1
+    }
+
+    export enum PinKit {
+        //% block="(P0+P1)"
+        Port1 = 0,
+        //% block="(P2+P8)"
+        Port2 = 1
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    const SAMPLE_NUMBER = 5;
+
+    /* --------------------------------------------------------------------- */
+
+    export function getDuration(echo: DigitalPin, trig: DigitalPin): number {
         /* Send pulse */
         pins.setPull(trig, PinPullMode.PullNone);
         pins.digitalWritePin(trig, 0);  // Clears the TriggerPin condition
@@ -49,25 +154,59 @@ namespace ultraSonic {
         pins.digitalWritePin(trig, 0);
 
         /**
-         * Read pulse
+         * Read pulse (https://makecode.microbit.org/reference/pins/pulse-in)
+         * If no pulse is received, the duration returned is 0
          * 
          * maxCmDistance * 2
-         * ----------------- ~ maxCmDistance * 58
+         * ----------------- = maxCmDistance * 57.7817583
          *     0.034613
+         * 
+         * Maximum distance in centimeters (default is 300 cm)
+         * = 300 * 57.7817583
+         * = 17,334.52749
+         * ~ 17,335
          */
-        const duration: number = pins.pulseIn(echo, PulseValue.High, maxCmDistance * 57.7817583);
+        return pins.pulseIn(echo, PulseValue.High, 17335);
+    }
+
+    /* --------------------------------------------------------------------- */
+
+    /**
+     * Measure the distance by sending a sound wave and get duration the time response (in microseconds)
+     * @param unit desired conversion unit
+     * @param port select 4-pin port
+     */
+    //% block="S01 UltraSonic Distance \\| Read distance $unit from port $port"
+    //% unit.defl=PingUnit.Centimeters
+    //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    export function readDistance(unit: PingUnit, port: PinKit): number {
+        /* Port? */
+        let echo, trig;
+        switch (port) {
+            case PinKit.Port1: echo = DigitalPin.P1; trig = DigitalPin.P0; break;
+            case PinKit.Port2: echo = DigitalPin.P8; trig = DigitalPin.P2; break;
+        }
+
+        /* Perform 5 samplings, take the average value */
+        let duration = 0;
+        for (let i = 0; i < SAMPLE_NUMBER; i++) {
+            duration = duration + getDuration(echo, trig);
+            basic.pause(18); //! ~ 17,335
+        }
+        duration = duration / SAMPLE_NUMBER;
 
         /**
          * Return the distance (cm)
          * 
-         *            0.034613   duration
-         * duration * -------- ~ --------
-         *               2          58
+         *            0.034613                          duration
+         * duration * -------- = duration * 0.0173065 ~ --------
+         *               2                                57.78
          * 
          * Return the distance (inches)
-         *            0.034613            duration
-         * duration * -------- * 0.3937 ~ --------
-         *               2                  147
+         *            0.034613                                   duration
+         * duration * -------- * 0.3937 = duration * 0.0068135 ~ --------
+         *               2                                        146.77
          */
         if (duration == 0)
             return 0;
@@ -84,64 +223,47 @@ namespace ultraSonic {
 
 //! pxt-dht11
 
-//% color="#41C0B5" weight=6 icon="\uf043" block="MKE-S14"
+//% color="#41C0B5" weight=6 icon="\uf043" block="S14"
 namespace dht11 {
     export enum TemperatureType {
         //% block="°C"
-        Celsius,
+        Celsius = 0,
         //% block="°F"
-        Fahrenheit
+        Fahrenheit = 1
     }
 
     export enum PinKit {
         //% block="P0"
-        P0,
+        P0 = 0,
         //% block="P1"
-        P1,
+        P1 = 1,
         //% block="P2"
-        P2,
+        P2 = 2,
         //% block="P13"
-        P13,
+        P13 = 3,
         //% block="P14"
-        P14,
+        P14 = 4,
         //% block="P15"
-        P15
+        P15 = 5
     }
 
     /* --------------------------------------------------------------------- */
 
-    const DHT11_SAMPLE_TIME = 2000; // 2,000 (ms)
-    const DHT11_TIMEOUT = 100;      // 100 (us)
-
-    let _startTime = 0;
-    let _readSuccessful = false;
-    let _lastreadtime = input.runningTime() - DHT11_SAMPLE_TIME;
-
-    let _temperature = 0;
-    let _humidity = 0;
-
-    const buffer: boolean[] = [false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false];
-    const data: number[] = [0, 0, 0, 0, 0];
+    /* Store values for each sensor using separate Pin */
+    const _temperature: number[] = [0, 0, 0, 0, 0, 0];
+    const _humidity: number[] = [0, 0, 0, 0, 0, 0];
 
     /* --------------------------------------------------------------------- */
 
-    export function read(sig: PinKit): boolean {
-        /**
-         * Check if sensor was read less than 2 seconds ago
-         * And return early to use last reading
-         */
-        if ((input.runningTime() - _lastreadtime) < DHT11_SAMPLE_TIME) {
-            return _readSuccessful;     // Check last correct measurement
-        }
-        _lastreadtime = input.runningTime();
-
-        /* Clear all data in array */
-        for (let i = 0; i < 40; i++) buffer[i] = false;
-        data[0] = data[1] = data[2] = data[3] = data[4] = 0;
+    export function read(sig: PinKit) {
+        const DHT11_TIMEOUT = 100;      // 100 (us)
+        const buffer: boolean[] = [false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false];
+        const data: number[] = [0, 0, 0, 0, 0];
+        let _startTime = 0;
 
         /* Port? */
         let pin;
@@ -161,7 +283,7 @@ namespace dht11 {
         /* 2. End the "Start Signal" */
         pins.setPull(pin, PinPullMode.PullUp);
         pins.digitalReadPin(pin);
-        control.waitMicros(30);         // Delay a moment (20us - 40us) to let sensor pull data line LOW
+        control.waitMicros(40);         // Delay a moment (20us - 40us) to let sensor pull data line LOW
 
         /* 3. DHT Response */
         _startTime = control.micros();
@@ -176,22 +298,23 @@ namespace dht11 {
         /* 4. Read Data - 40 bit */
         for (let dataBits = 0; dataBits < 40; dataBits++) {
             _startTime = control.micros();
+            while (pins.digitalReadPin(pin) === 1) {
+                if (control.micros() - _startTime > DHT11_TIMEOUT) break;
+            }
+            _startTime = control.micros();
             while (pins.digitalReadPin(pin) === 0) {    // LOW 50us
                 if (control.micros() - _startTime > DHT11_TIMEOUT) break;
             }
+
             /**
              * If sensor still pull up data pin after 28 us it means 1, otherwise 0
              * 
              * Data 1 : HIGH 70us
              * Data 0 : LOW (26us - 28us)
              */
-            _startTime = control.micros();
             control.waitMicros(28);
             if (pins.digitalReadPin(pin) === 1) {
                 buffer[dataBits] = true;
-                while (pins.digitalReadPin(pin) === 1) {
-                    if (control.micros() - _startTime > DHT11_TIMEOUT) break;
-                }
             }
         }
 
@@ -216,21 +339,9 @@ namespace dht11 {
 
         /* 5. Verify Checksum */
         if (((data[0] + data[1] + data[2] + data[3]) & 0xFF) === data[4]) {
-            _humidity = data[0] + data[1] * 0.1;
-            _temperature = data[2] + data[3] * 0.1;
-            _readSuccessful = true;
-        } else {
-            if (data[0] == 255 &&
-                data[1] == 255 &&
-                data[2] == 255 &&
-                data[3] == 255 &&
-                data[4] == 255) {
-                _readSuccessful = false;
-            } else {
-                _readSuccessful = true;
-            }
+            _humidity[sig] = data[0] + data[1] * 0.1;
+            _temperature[sig] = data[2] + data[3] * 0.1;
         }
-        return _readSuccessful;
     }
 
     /* --------------------------------------------------------------------- */
@@ -240,34 +351,30 @@ namespace dht11 {
      * @param sig signal pin (default P0)
      * @param unit desired conversion unit
      */
-    //% block="DHT11 \\| Read temperature from $sig port in degree $unit"
-    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% block="S14 Temp&Humi \\| Read temperature in degree $unit from port $sig"
     //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=external
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% inlineInputMode=inline
     //% weight=2
-    export function readTemperature(sig: PinKit, unit: TemperatureType): number {
-        let t = 0;
-        if (read(sig)) {
-            (unit == TemperatureType.Celsius) ? (t = _temperature) : (t = _temperature * 1.8 + 32);
+    export function readTemperature(unit: TemperatureType, sig: PinKit): number {
+        read(sig);
+        switch (unit) {
+            case TemperatureType.Celsius: return _temperature[sig];
+            case TemperatureType.Fahrenheit: return (_temperature[sig] * 1.8 + 32);
         }
-        return t;
     }
 
     /**
      * Read ambient air humidity
      * @param sig signal pin (default P0)
      */
-    //% block="DHT11 \\| Read air humidity (\\%) from $sig port"
+    //% block="S14 Temp&Humi \\| Read air humidity (\\%) from port $sig"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
-    //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=external
+    //% inlineInputMode=inline
     //% weight=1
     export function readHumidity(sig: PinKit): number {
-        let h = 0;
-        if (read(sig)) {
-            h = _humidity;
-        }
-        return h;
+        read(sig);
+        return _humidity[sig];
     }
 }
 
@@ -277,59 +384,232 @@ namespace dht11 {
 
 //! pxt-ds18b20
 
-//% color="#41C0B5" weight=5 icon="\uf2c9" block="MKE-S15"
+//% color="#41C0B5" weight=5 icon="\uf2c9" block="S15"
 namespace ds18b20 {
     export enum TemperatureType {
         //% block="°C"
-        Celsius,
+        Celsius = 0,
         //% block="°F"
-        Fahrenheit
+        Fahrenheit = 1
     }
 
     export enum PinKit {
         //% block="P0"
-        P0,
+        P0 = 0,
         //% block="P1"
-        P1,
+        P1 = 1,
         //% block="P2"
-        P2,
+        P2 = 2,
         //% block="P13"
-        P13,
+        P13 = 3,
         //% block="P14"
-        P14,
+        P14 = 4,
         //% block="P15"
-        P15
+        P15 = 5
     }
 
     /* --------------------------------------------------------------------- */
 
-    //% shim=ds18b20::temperature
-    export function temperature(sig: PinKit): number {
-        return 999;
+    let ack = 0;
+    let sc_byte = 0;
+    let dat = 0;
+
+    let low = 0;
+    let high = 0;
+
+    let temperature = 0;
+
+    /* Store values for each sensor using separate Pin */
+    const _lastTemp: number[] = [0, 0, 0, 0, 0, 0];
+
+    /* --------------------------------------------------------------------- */
+
+    /* Reset Pulses
+    **
+    ** All communication with the DS18B20 begins with an initialization sequence
+    ** That consists of a reset pulse from the master followed by a presence pulse from the DS18B20
+    **
+    ** During the initialization sequence
+    ** The bus master transmits (TX) the reset pulse by pulling the 1-Wire bus low for a minimum of 480µs
+    */
+    export function init(pin: DigitalPin) {
+        pins.digitalWritePin(pin, 0);
+        control.waitMicros(600);    // MASTER Tx RESET PULSE
+
+        pins.digitalWritePin(pin, 1);
+        control.waitMicros(30);     // DS18B20 WAITS
+
+        /* Presence Pulses
+        **
+        ** The bus master then releases the bus and goes into receive mode (RX)
+        ** When the DS18B20 detects this rising edge, it waits 15µs to 60µs
+        ** And then transmits a presence pulse by pulling the 1-Wire bus low for 60µs to 240µs
+        */
+        ack = pins.digitalReadPin(pin);
+        control.waitMicros(600);
+
+        return ack;
     }
+
+    /* Write Time Slots
+    **
+    ** The bus master uses a Write 1 time slot to write a logic 1 to the DS18B20
+    ** And a Write 0 time slot to write a logic 0 to the DS18B20
+    **
+    ** All write time slots must be a minimum of 60µs in duration
+    ** With a minimum of a 1µs recovery time between individual write slots
+    **
+    ** To generate a Write 1 time slot, after pulling the 1-Wire bus low
+    ** The bus master must release the 1-Wire bus within 15µs
+    **
+    ** To generate a Write 0 time slot, after pulling the 1-Wire bus low
+    ** The bus master must continue to hold the bus low for the duration of the time slot (at least 60µs)
+    */
+    export function write(pin: DigitalPin, data: number) {
+        sc_byte = 0x01;
+
+        for (let index = 0; index < 8; index++) {
+            pins.digitalWritePin(pin, 0);   // Master pull LOW
+
+            if (data & sc_byte) {           // Write bit 1
+                pins.digitalWritePin(pin, 1);
+                control.waitMicros(60);
+            } else {                        // Write bit 0
+                pins.digitalWritePin(pin, 0);
+                control.waitMicros(60);
+            }
+
+            pins.digitalWritePin(pin, 1);   // Master release
+            data = data >> 1;
+        }
+    }
+
+    /* Read Time Slots
+    **
+    ** The DS18B20 can only transmit data to the master when the master issues read time slots
+    ** Therefore, the master must generate read time slots
+    **
+    ** All read time slots must be a minimum of 60µs in duration
+    ** With a minimum of a 1µs recovery time between slots
+    **
+    ** The master device pulling the 1-Wire bus low for a minimum of 1µs and then releasing the bus
+    ** The DS18B20 will begin transmitting a 1 or 0 on bus
+    **
+    ** The master must release the bus and then sample the bus state within 15µs from the start of the slot
+    ** The DS18B20 transmits a 1 by leaving the bus high and transmits a 0 by pulling the bus low
+    */
+    export function read(pin: DigitalPin) {
+        dat = 0x00;
+        sc_byte = 0x01;
+
+        for (let index = 0; index < 8; index++) {
+            pins.digitalWritePin(pin, 0);   // Master pull LOW
+            pins.digitalWritePin(pin, 1);   // Master release
+
+            if (pins.digitalReadPin(pin)) {
+                dat = dat + sc_byte;
+            }
+            sc_byte = sc_byte << 1;         // Read value of 1 bit
+            control.waitMicros(60);
+        }
+
+        return dat;
+    }
+
+    /* Read Scratchpad [BEh]
+    **
+    ** The data transfer starts with the least significant bit of byte 0
+    ** And continues through the scratchpad until the 9th byte (byte 8 – CRC) is read
+    **
+    ** Byte 0 : TEMPERATURE LSB
+    ** Byte 1 : TEMPERATURE MSB
+    ** Byte 2 : TH REGISTER OR USER BYTE 1
+    ** Byte 3 : TL REGISTER OR USER BYTE 2
+    ** Byte 4 : CONFIGURATION REGISTER
+    ** Byte 5 : RESERVED
+    ** Byte 6 : RESERVED
+    ** Byte 7 : RESERVED
+    ** Byte 8 : CRC
+    */
 
     /* --------------------------------------------------------------------- */
 
     /**
      * Read the ambient air temperature
-     * @param sig signal pin (default P0)
      * @param unit desired conversion unit
+     * @param sig signal pin (default P0)
      */
-    //% block="DS18B20 \\| Read temperature from $sig port in degree $unit"
-    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% block="S15 Water Temp \\| Read temperature in degree $unit from port $sig"
     //% unit.defl=TemperatureType.Celsius
-    //% inlineInputMode=external
+    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% inlineInputMode=inline
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
-        let t = temperature(sig);
-        if (t == 999) {
-            return 0;
-        } else {
-            if (unit == TemperatureType.Celsius) {
-                return t;
-            } else {
-                return t * 1.8 + 32;
-            }
+        /* Port? */
+        let pin;
+        switch (sig) {
+            case PinKit.P0: pin = DigitalPin.P0; break;
+            case PinKit.P1: pin = DigitalPin.P1; break;
+            case PinKit.P2: pin = DigitalPin.P2; break;
+            case PinKit.P13: pin = DigitalPin.P13; break;
+            case PinKit.P14: pin = DigitalPin.P14; break;
+            case PinKit.P15: pin = DigitalPin.P15; break;
         }
+
+        /* Transaction Sequence
+        **
+        ** The transaction sequence for accessing the DS18B20 is as follows:
+        ** Step 1. Initialization
+        ** Step 2. ROM Command
+        ** Step 3. DS18B20 Function Command
+        */
+        init(pin);          // Reset Pulses, then Presence Pulses
+        write(pin, 0xCC);   // ROM Commands       : Skip Rom [CCh]
+        write(pin, 0x44);   // Function Commands  : Convert T [44h]
+        
+        /* The 1-Wire bus must be switched to the strong pullup within 10µs (max)
+        ** After a Convert T [44h] or Copy Scratchpad [48h] command is issued
+        ** And the bus must be held high by the pullup for the duration of the conversion (tCONV) or data transfer (tWR = 10ms)
+        ** No other activity can take place on the 1-Wire bus while the pullup is enabled
+        **
+        ** 12-bit resolution. tCONV max is 750ms
+        */
+        basic.pause(10);    //! Temperature Conversion Time (tCONV)
+
+        init(pin);          // Reset Pulses, then Presence Pulses
+        write(pin, 0xCC);   // ROM Commands       : Skip Rom [CCh]
+        write(pin, 0xBE);   // Function Commands  : Read Scratchpad [BEh]
+
+        low = read(pin);
+        high = read(pin);
+
+        /*     |--- MS BYTE -----------------------|   |--- LS BYTE -----------------------|
+        ** Bit 15 - 14 - 13 - 12 - 11 - 10 - 09 - 08 - 07 - 06 - 05 - 04 - 03 - 02 - 01 - 00
+        **      S    S    S    S    S   2^+6 2^+5 2^+4 2^+3 2^+2 2^+1 2^+0 2^-1 2^-2 2^-3 2^-4
+        **
+        ** Negative Numbers S = 1
+        ** Positive Numbers S = 0
+        */
+        temperature = high << 8 | low;
+        temperature = temperature / 16;
+        if (temperature > 130) {
+            temperature = _lastTemp[sig];
+        }
+        _lastTemp[sig] = temperature;
+
+        let value;
+        
+        /* Get value temperature */
+        switch (unit) {
+            case TemperatureType.Celsius: value = _lastTemp[sig]; break;
+            case TemperatureType.Fahrenheit: value = (_lastTemp[sig] * 1.8 + 32); break;
+        }
+
+        /* Take only 2 decimal places */
+        value = value * 100;
+        value = Math.trunc(value);
+        value = value / 100;
+
+        return value;
     }
 }
 
@@ -339,7 +619,7 @@ namespace ds18b20 {
 
 //! pxt-lcd
 
-//% color="#FEBC68" weight=4 icon="\uf26c" block="MKE-M07,08"
+//% color="#FEBC68" weight=4 icon="\uf26c" block="M07/08"
 //% groups="['Display', 'Clean']"
 namespace lcd {
     /**
@@ -543,8 +823,9 @@ namespace lcd {
      * @param text is the string will be shown
      * @param col is LCD column position
      * @param row is LCD row position
+     * @param addr fixed address is (0x27), not allowed to change
      */
-    //% block="LCD I2C port \\| Print $text at Column $col and Row $row"
+    //% block="M07/08 LCD I2C \\| Print $text at Column $col and Row $row"
     //% text.defl="MakerEDU"
     //% col.defl=1 col.min=1 col.max=20
     //% row.defl=1 row.min=1 row.max=4
@@ -610,8 +891,9 @@ namespace lcd {
 
     /**
      * Clear all display content
+     * @param addr fixed address is (0x27), not allowed to change
      */
-    //% block="LCD I2C port \\| Clean all"
+    //% block="M07/08 LCD I2C \\| Clean all"
     //% inlineInputMode=inline
     //% weight=1
     //% group="Clean"
@@ -638,25 +920,25 @@ namespace lcd {
 
 //! pxt-ds3231
 
-//% color="#FEBC68" weight=3 icon="\uf017" block="MKE-M09"
+//% color="#FEBC68" weight=3 icon="\uf017" block="M09"
 //% groups="['Get Info Time (Data)', 'Get Info Time (Text)', 'Setting Time', 'Alarm']"
 namespace ds3231 {
     export enum Calendar {
         //% block="Day"
-        Day,
+        Day = 0,
         //% block="Month"
-        Month,
+        Month = 1,
         //% block="Year"
-        Year
+        Year = 2
     }
 
     export enum Clock {
         //% block="Hour"
-        Hour,
+        Hour = 0,
         //% block="Minute"
-        Minute,
+        Minute = 1,
         //% block="Second"
-        Second
+        Second = 2
     }
 
     export enum Month {
@@ -834,7 +1116,7 @@ namespace ds3231 {
      * Get Day, Month, Year data from DS3231
      * @param calendar select get data Day, Month or Year
      */
-    //% block="DS3231 I2C port \\| Get $calendar in Calendar"
+    //% block="M09 Clock I2C \\| Get $calendar in Calendar"
     //% calendar.defl=Calendar.Day
     //% inlineInputMode=inline
     //% weight=11
@@ -850,7 +1132,7 @@ namespace ds3231 {
     /**
      * Get "Date of Week" data from DS3231
      */
-    //% block="DS3231 I2C port \\| Get Days of the Week"
+    //% block="M09 Clock I2C \\| Get Days of the Week"
     //% inlineInputMode=inline
     //% weight=10
     //% group="Get Info Time (Data)"
@@ -871,7 +1153,7 @@ namespace ds3231 {
      * Get Hour, Minute, Second data from DS3231
      * @param clock select get data Hour, Minute or Second
      */
-    //% block="DS3231 I2C port \\| Get $clock in Time now"
+    //% block="M09 Clock I2C \\| Get $clock in Time now"
     //% clock.defl=Clock.Hour
     //% inlineInputMode=inline
     //% weight=9
@@ -887,7 +1169,7 @@ namespace ds3231 {
     /**
      * Get aggregated __DATE__ data
      */
-    //% block="DS3231 I2C port \\| Get Calendar"
+    //% block="M09 Clock I2C \\| Get Calendar"
     //% inlineInputMode=inline
     //% weight=8
     //% group="Get Info Time (Text)"
@@ -908,7 +1190,7 @@ namespace ds3231 {
     /**
      * Get aggregated __TIME__ data
      */
-    //% block="DS3231 I2C port \\| Get Time now"
+    //% block="M09 Clock I2C \\| Get Time now"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Get Info Time (Text)"
@@ -968,7 +1250,7 @@ namespace ds3231 {
      * @param hour choose Hour
      * @param minute choose Minute
      */
-    //% block="DS3231 I2C port \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
+    //% block="M09 Clock I2C \\| Set Day $day Month $month Year $year, $hour Hour : $minute Minute : 0 Second"
     //% day.defl=1 day.min=1 day.max=31
     //% month.defl=Month.Jan
     //% year.defl=2022 year.min=2000 year.max=2099
@@ -996,7 +1278,7 @@ namespace ds3231 {
      * Set the Date & Time for the DS3231 using the command
      * @param setFullTime install by command according to the syntax "ST-dd/mm/yyyy-hh:mm:ss"
      */
-    //% block="DS3231 I2C port \\| Setting Date & Time $setFullTime"
+    //% block="M09 Clock I2C \\| Setting Date & Time $setFullTime"
     //% setFullTime.defl="ST-15/08/2022-13:13:13"
     //% inlineInputMode=inline
     //% weight=4
@@ -1054,7 +1336,7 @@ namespace ds3231 {
      * @param minute choose Minute
      * @param types alarm once or every day
      */
-    //% block="DS3231 I2C port \\| Set Alarm at $hour Hour : $minute Minute $types"
+    //% block="M09 Clock I2C \\| Set Alarm at $hour Hour : $minute Minute $types"
     //% hour.defl=11 hour.min=0 hour.max=23
     //% minute.defl=30 minute.min=0 minute.max=59
     //% types.defl=Alarm.OneTime
@@ -1072,7 +1354,7 @@ namespace ds3231 {
      * @param ticks install by command according to the syntax "ST-hh:mm"
      * @param types alarm once or every day
      */
-    //% block="DS3231 I2C port \\| Setting Alarm $ticks $types"
+    //% block="M09 Clock I2C \\| Setting Alarm $ticks $types"
     //% ticks.defl="SA-15:30"
     //% types.defl=Alarm.OneTime
     //% inlineInputMode=inline
@@ -1106,7 +1388,7 @@ namespace ds3231 {
     /**
      * Update the time to see if it's time for the alarm
      */
-    //% block="DS3231 I2C port \\| Check Alarm 💤⏰"
+    //% block="M09 Clock I2C \\| Check Alarm 💤⏰"
     //% inlineInputMode=inline
     //% weight=1
     //% group="Alarm"
@@ -1136,7 +1418,7 @@ namespace ds3231 {
 
 //! pxt-mp3Player
 
-//% color="#FEBC68" weight=2 icon="\uf001" block="MKE-M11"
+//% color="#FEBC68" weight=2 icon="\uf001" block="M11"
 //% groups="['Setting', 'Control', 'Get Info', 'Advanced Control']"
 namespace mp3Player {
     export enum EQ {
@@ -1222,10 +1504,10 @@ namespace mp3Player {
          * rate : the baud rate for transmitting and receiving data
          * 
          * MP3Player <----> MicroBit
-         * RX               P14 (old) / P2 (new) (TX)
-         * TX               P15 (old) / P8 (new) (RX)
+         * (RX)             P8 (TX)
+         * (TX)             P2 (RX)
          */
-        serial.redirect(SerialPin.P2, SerialPin.P8, BaudRate.BaudRate9600);
+        serial.redirect(SerialPin.P8, SerialPin.P2, BaudRate.BaudRate9600);
     }
 
     /* Calculate Checksum */
@@ -1539,7 +1821,7 @@ namespace mp3Player {
     /**
      * Perform volume up
      */
-    //% block="MP3 Player UART port \\| Up volume"
+    //% block="M11 MP3 Player \\| Up volume from port (P2+P8)"
     //% inlineInputMode=inline
     //% weight=13
     //% group="Setting"
@@ -1553,7 +1835,7 @@ namespace mp3Player {
     /**
      * Perform volume down
      */
-    //% block="MP3 Player UART port \\| Down volume"
+    //% block="M11 MP3 Player \\| Down volume from port (P2+P8)"
     //% inlineInputMode=inline
     //% weight=12
     //% group="Setting"
@@ -1568,7 +1850,7 @@ namespace mp3Player {
      * Perform volume adjustment
      * @param volume select sound level from 0 to 30
      */
-    //% block="MP3 Player UART port \\| Set volume level $volume"
+    //% block="M11 MP3 Player \\| Set volume level $volume from port (P2+P8)"
     //% volume.defl=20 volume.min=0 volume.max=30
     //% inlineInputMode=inline
     //% weight=11
@@ -1584,7 +1866,7 @@ namespace mp3Player {
      * Adjust the EQ of the sound
      * @param chooseEQ select EQ format
      */
-    //% block="MP3 Player UART port \\| Set EQ $chooseEQ"
+    //% block="M11 MP3 Player \\| Set EQ $chooseEQ from port (P2+P8)"
     //% chooseEQ.defl=EQ.Normal
     //% inlineInputMode=inline
     //% weight=10
@@ -1600,7 +1882,7 @@ namespace mp3Player {
      * Play the music file of your choice
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player UART port \\| Play file number $file"
+    //% block="M11 MP3 Player \\| Play file number $file from port (P2+P8)"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=9
@@ -1619,7 +1901,7 @@ namespace mp3Player {
      * Play the next or previous music file compared to the current music file
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player UART port \\| Play $playWhat"
+    //% block="M11 MP3 Player \\| Play $playWhat from port (P2+P8)"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=8
@@ -1637,7 +1919,7 @@ namespace mp3Player {
     /**
      * Pause the currently playing file
      */
-    //% block="MP3 Player UART port \\| Pause"
+    //% block="M11 MP3 Player \\| Pause from port (P2+P8)"
     //% inlineInputMode=inline
     //% weight=7
     //% group="Control"
@@ -1651,7 +1933,7 @@ namespace mp3Player {
     /**
      * Play continues with paused file music
      */
-    //% block="MP3 Player UART port \\| Start (Play continues)"
+    //% block="M11 MP3 Player \\| Start (Play continues) from port (P2+P8)"
     //% inlineInputMode=inline
     //% weight=6
     //% group="Control"
@@ -1665,7 +1947,7 @@ namespace mp3Player {
     /**
      * Get the parameters being set in MP3 Player
      */
-    //% block="MP3 Player UART port \\| Read information setting current"
+    //% block="M11 MP3 Player \\| Read information setting current from port (P2+P8)"
     //% inlineInputMode=inline
     //% weight=5
     //% group="Get Info"
@@ -1678,7 +1960,7 @@ namespace mp3Player {
      * @param file select the music file you want to play
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player UART port \\| Play file number $file in $second seconds"
+    //% block="M11 MP3 Player \\| Play file number $file for $second seconds from port (P2+P8)"
     //% file.defl=1 file.min=0 file.max=65535
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -1695,7 +1977,7 @@ namespace mp3Player {
      * Play the music file of your choice until the song is over
      * @param file select the music file you want to play
      */
-    //% block="MP3 Player UART port \\| Play file number $file until done"
+    //% block="M11 MP3 Player \\| Play file number $file until done from port (P2+P8)"
     //% file.defl=1 file.min=0 file.max=65535
     //% inlineInputMode=inline
     //% weight=3
@@ -1716,7 +1998,7 @@ namespace mp3Player {
      * @param playWhat choose to play next or previous music file
      * @param second set how long you want to play that file
      */
-    //% block="MP3 Player UART port \\| Play $playWhat in $second seconds"
+    //% block="M11 MP3 Player \\| Play $playWhat for $second seconds from port (P2+P8)"
     //% playWhat.defl=PlayWhat.Next
     //% second.defl=2.5
     //% inlineInputMode=inline
@@ -1733,7 +2015,7 @@ namespace mp3Player {
      * Play next or previous music file until the song is over
      * @param playWhat choose to play next or previous music file
      */
-    //% block="MP3 Player UART port \\| Play $playWhat until done"
+    //% block="M11 MP3 Player \\| Play $playWhat until done from port (P2+P8)"
     //% playWhat.defl=PlayWhat.Next
     //% inlineInputMode=inline
     //% weight=1
@@ -1914,16 +2196,16 @@ namespace background {
 
 //! pxt-ir1838
 
-//% color="#FEBC68" weight=1 icon="\uf00d" block="MKE-M14"
+//% color="#FEBC68" weight=1 icon="\uf00d" block="M14"
 //% groups="['Get Info Infrared (Data)', 'Get Info Infrared (Text)']"
 namespace ir1838 {
     export enum ValueIR {
         //% block="command"
-        Command,
+        Command = 0,
         //% block="address"
-        Address,
+        Address = 1,
         //% block="raw data"
-        RawData
+        RawData = 2
     }
 
     /* https://hshop.vn/products/module-dieu-khien-hong-ngoai-tu-xa */
@@ -1954,17 +2236,17 @@ namespace ir1838 {
 
     export enum PinKit {
         //% block="P0"
-        P0,
+        P0 = 0,
         //% block="P1"
-        P1,
+        P1 = 1,
         //% block="P2"
-        P2,
+        P2 = 2,
         //% block="P13"
-        P13,
+        P13 = 3,
         //% block="P14"
-        P14,
+        P14 = 4,
         //% block="P15"
-        P15
+        P15 = 5
     }
 
     /* --------------------------------------------------------------------- */
@@ -2273,7 +2555,7 @@ namespace ir1838 {
      * @param chooseValue select the type of value IR you want to read
      * @param sig signal pin (default P0)
      */
-    //% block="IR1838 \\| Read $chooseValue NEC from $sig port"
+    //% block="M14 IR Remote \\| Read $chooseValue NEC from port $sig"
     //% chooseValue.defl=ValueIR.Command
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
@@ -2311,7 +2593,7 @@ namespace ir1838 {
      * Print all information about the received IR signal, NEC standard
      * @param sig signal pin (default P0)
      */
-    //% block="IR1838 \\| Print IR NEC result short from $sig port"
+    //% block="M14 IR Remote \\| Print IR NEC result short from $sig port"
     //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     //% weight=1
@@ -2343,22 +2625,3 @@ namespace ir1838 {
         }
     }
 }
-
-/* ------------------------------------------------------------------------- */
-/*                                 LIST PORT                                 */
-/* ------------------------------------------------------------------------- */
-
-/*
-** SERVO (3 PIN)                : P0 , P12
-**
-** MOTOR A                      : P13 , P14
-** MOTOR B                      : P15 , P16
-**
-** I2C (4PIN)                   : P19 , P20
-**
-** UART (4 PIN)                 : P2+P8         | [GND - 5V - P8 - P2]
-** PORT 4 PIN                   : P0+P1 , P2+P8 | [GND - 5V - P1 - P0]
-**
-** PORT 3 PIN (ANALOG - TOUCH)  : P0 , P1 , P2
-** PORT 3 PIN (DIGITAL)         : P13 , P14 , P15
-*/

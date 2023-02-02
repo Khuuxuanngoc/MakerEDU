@@ -1,0 +1,9 @@
+Test với remote bất kỳ, sau đây là giá trị nhận được
+Trong đó (A) là Address, (C) là Command và (D) là DataRaw
+
+  ON/OFF       - A: 0x00 - C: 0x00 - D: 0xFF00FF00 = 4278255360
+  Intermittent - A: 0x00 - C: 0x01 - D: 0xFE01FF00 = 4261543680
+  Continuous   - A: 0x00 - C: 0x02 - D: 0xFD02FF00 = 4244832000
+  Timing       - A: 0x00 - C: 0x08 - D: 0xF708FF00 = 4144561920
+  Big/Small    - A: 0x00 - C: 0x09 - D: 0xF609FF00 = 4127850240
+  Light        - A: 0x00 - C: 0x0A - D: 0xF50AFF00 = 4111138560
