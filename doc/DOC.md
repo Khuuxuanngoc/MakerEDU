@@ -16,21 +16,16 @@
 >
 > Bộ *"thư viện tiện ích mở rộng"* - [Extension Gallery](https://makecode.microbit.org/extensions).
 >
+> ---
 >
+> Trang web giúp *"phát triển nhanh"* giao diện, tính năng các khối mở rộng do ta viết [MakeCode Blocks Playground](https://makecode.com/playground#basic-hello-world).
 >
+> Trang web giúp kiểm tra thực tế bộ khối mở rộng do ta viết [Makecode Microbit](https://makecode.microbit.org/).
 >
+> ---
 >
->
->
->
-> Trang web giúp phát triển giao diện các khối [MakeCode Blocks Playground](https://makecode.com/playground#basic-hello-world)
->
-> 
->
->
->
->
->
+> Các bộ thư viện tham khảo trong quá trình phát triển:
+> - [tinkertanker/pxt-iot-environment-kit](https://github.com/tinkertanker/pxt-iot-environment-kit)
 
 ## Tổng quan về "MakerEDU Shield for Microbit"
 
@@ -46,13 +41,13 @@
 > - `P19` - SCL
 > - `P20` - SDA
 
-> **2** cụm port 4Wires `UART` **[ RX | TX | 5V | GND ]** gồm:
-> - `P0+P1` - UART1
->   - P0 - TX1
->   - P1 - RX1
-> - `P2+P8` - UART2
->   - P2 - TX2
->   - P8 - RX2
+> **2** cụm port 4Wires **[ P1/P8 | P0/P2 | 5V | GND ]** gồm:
+> - `P0+P1` - Digital
+>   - P0 - Trig
+>   - P1 - Echo
+> - `P2+P8` - Digital, UART
+>   - P2 - Trig, RX
+>   - P8 - Echo, TX
 >
 > Lưu ý, với tính năng **UART (software)**, Micro:bit chỉ hỗ trợ cho các pin sau:
 >
@@ -99,7 +94,7 @@
 
 > [Cảm Biến Siêu Âm MKE-S01 Ultra Sonic Distance Sensor](https://hshop.vn/products/cam-bien-sieu-am-mkl-us01-ultra-sonic-distance-sensor)
 >
-> Sử dụng một trong 2 cụm port 4Wires `UART`.
+> Sử dụng một trong 2 cụm port 4Wires gồm `(P0+P1)` và `(P2+P8)`.
 
 ### S14
 
@@ -133,7 +128,7 @@
 
 > [Mạch Phát Âm Thanh MKE-M11 UART Control MP3 Player Module](https://hshop.vn/products/mach-phat-am-thanh-mkl-m11-uart-control-mp3-player-module)
 >
-> Sử dụng một trong 2 cụm port 4Wires `UART`.
+> Sử dụng cụm port 4Wires `UART (P2+P8)`.
 
 ### M14
 
@@ -145,8 +140,32 @@
 
 ### Bluetooth
 
-Sử dụng tính năng **Bluetooth (BLE)** `V1.5 (4.0)` hoặc `V2 (5.1)` tích hợp sẵn trên Micro:bit.
+> Sử dụng tính năng **Bluetooth (BLE)** `V1.5 (4.0)` hoặc `V2 (5.1)` tích hợp sẵn trên Micro:bit.
+>
+> Mọi thứ về Bluetooth của Micro:bit có thể xem tại đây ... [Bluetooth](https://makecode.microbit.org/reference/bluetooth).
+>
+> Các bước ghép nối Micro:bit với Phone qua Bluetooth:
+> 1. Ở lần ghép nối đầu tiên, bạn nên nạp đoạn mã code file HEX `microbit-pair` này cho Micro:bit trước.<br>Xem qua bài viết, [Bluetooth troubleshooting guide](https://support.microbit.org/support/solutions/articles/19000069393) và, [micro:bit iOS app: connect and send programs](https://support.microbit.org/support/solutions/articles/19000117215-micro-bit-ios-app-connect-and-send-programs).
+> 2. Tiếp bạn mở App `micro:bit` trên Phone -> *"Choose micro:bit"* -> *"Pair a new micro:bit"*.
+> 3. Lúc này bạn đang chuẩn bị *"Enter pairing mode"*.<br>Thực hiện trên micro:bit với các thao tác theo hướng dẫn trên App.
+> 4. Sau khi ghép nối thành công, kể từ giờ mỗi khi mở App, nó sẽ tự động ghép nối với bo mạch micro:bit đó.<br>Từ giờ bạn có thể nạp các code có ứng dụng sử dụng Bluetooth với Phone.
+>     - Chỉ cần mở App `micro:bit` -> *"Monitor and Control"*.
+>     - Thiết lập giao diện muốn dùng trong mục *"Set"* và *"Add"*.
+>     - Chọn thiết bị micro:bit đã thực hiện ghép nối trước đó (mỗi bo mạch micro:bit sẽ có 1 tên riêng hiển thị trên Phone).
+>     - Cuối cùng, chỉ việc bấm *"Start"* khi muốn bắt đầu điều khiển bằng Bluetooth.
+>     - Và nhấn *"Stop"* để dừng kết nối Bluetooth, mỗi khi muốn kết thúc điều khiển.
+>
+> Một số dự án demo bằng tính năng Bluetooth:
+> - [Controlling the Micro:bit from a Phone App](https://www.youtube.com/watch?v=UuGTBZRwC-8&ab_channel=BillSiever)
 
 ### Driver Motor
 
-Sử dụng mạch **Driver (L9110)** tích hợp sẵn trên shield MakerEdu.
+> Sử dụng mạch **Driver (L9110)** tích hợp sẵn trên shield MakerEdu.
+
+### Servo
+
+> Sử dụng trực tiếp tính năng **PPM** của Micro:bit.
+>
+> Một chút lưu ý về chân [P12](https://microbit.pinout.xyz/pin-p12-accessibility-.html) (Reserved - Accessibility).
+>
+> Bên cạnh, Micro:bit chỉ hỗ trợ tính năng PPM cho vài chân, ta có thể xem chi tiết hơn trong khối [Servo Write Pin](https://makecode.microbit.org/reference/pins/servo-write-pin).
