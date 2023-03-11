@@ -1,7 +1,7 @@
 /**
- * Code này giúp ta biết được toàn bộ thông tin giá trị
- * Nhận được từ mỗi nút của remote IR
- * Dưới dạng giá trị HEX
+ * Code này giúp bạn biết được toàn bộ thông tin dạng văn bản
+ * Nhận được từ mỗi nút bấm của Remote IR
+ * Dưới dạng các giá trị HEX
  */
 
 let dataIR = ""
