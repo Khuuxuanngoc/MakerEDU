@@ -1084,7 +1084,7 @@ namespace ds18b20 {
      */
     //% block="S15 Water Temp \\| Read temperature in degree $unit from port $sig"
     //% unit.defl=TemperatureType.Celsius
-    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% sig.defl=ds18b20.PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     export function readTemperature(sig: PinKit, unit: TemperatureType): number {
         /* Port? */
