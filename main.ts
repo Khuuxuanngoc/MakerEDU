@@ -137,7 +137,7 @@ namespace driver {
     //% speed.defl=50 speed.min=1 speed.max=100
     //% inlineInputMode=inline
     //% weight=5
-    // % group="Control Motor DC"
+    //% group="Control Motor DC"
     export function controlMotor(addr: Address, motor: Motor, rotate: Rotate, speed: number) {
         /* Make sure to initialize each Driver once */
         if (!_initOneTime[addr - 64]) {
