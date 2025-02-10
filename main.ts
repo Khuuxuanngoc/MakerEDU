@@ -204,7 +204,7 @@ namespace driver {
     //% block="set newAddress $newAddress."
     //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
-    export function setAddress(newAddress: number): void {
+    export function setAddress(newAddress: Address): void {
         let oldAddress = 64;
         let data = 0;
         let dataToSend: number[] = [newAddress, 2, 0, 0, 0, (newAddress + 2)];
