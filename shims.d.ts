@@ -1,5 +1,9 @@
+// Auto-generated. Do not edit.
 declare namespace ds18b20 {
+
+    /************************/
+    //% shim=ds18b20::temperature
+    function temperature(p: int32): number;
 }
 
-declare namespace ds3231 {
-}
+// Auto-generated. Do not edit. Really.

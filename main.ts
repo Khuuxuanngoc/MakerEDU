@@ -121,6 +121,31 @@ namespace driver {
     }
 
     /* --------------------------------------------------------------------- */
+    /**
+     * set address
+     */
+    //% block="set newAddress $newAddress."
+    //% newAddress.min=64 newAddress.max=68
+    export function setAddress(newAddress: number): void {
+        let oldAddress = 64;
+        let data = 0;
+        let dataToSend: number[] = [newAddress, 2, 0, 0, 0, (newAddress + 2)];
+        let buffer = pins.createBuffer(6);
+
+        for (let i = 0; i < 6; i++) {
+            buffer.setUint8(i, dataToSend[i]);
+        }
+
+        for (let i = 64; i < 69; i++) {
+            pins.i2cWriteNumber(i, 1, NumberFormat.UInt8LE, false)
+            data = pins.i2cReadNumber(i, NumberFormat.UInt8LE)
+            if (data == 1) {
+                oldAddress = i;
+            }
+        }
+
+        pins.i2cWriteBuffer(oldAddress, buffer);
+    }
 
     /**
      * Control DC motor with parameters: speed & direction of rotation
@@ -1574,7 +1599,7 @@ namespace ds3231 {
      * To determine this "Date" of Month of Year is what "Day of the Week"?
      * The Week begin Sunday with number 0
      * 
-     * Way Tomohiko Sakamoto’s used the "Doomsday Algorithm" to determine the Day of the Week!
+     * Way Tomohiko Sakamoto's used the "Doomsday Algorithm" to determine the Day of the Week!
      */
     export function getDayOfWeek(y: number, m: number, d: number): number {
         const monthTable: number[] = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
