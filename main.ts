@@ -202,7 +202,7 @@ namespace driver {
      * @param newAddress is I2C address for Driver
      */
     //% block="set newAddress $newAddress."
-    //% newAddress.defl=Address.add64 newAddress.fieldEditor="gridpicker" newAddress.fieldOptions.columns=2
+    //% newAddress.defl=driver.Address.add64 newAddress.fieldEditor="gridpicker" newAddress.fieldOptions.columns=2
     //% inlineInputMode=inline
     export function setAddress(newAddress: Address): void {
         let oldAddress = 64;
