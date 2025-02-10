@@ -233,7 +233,7 @@ namespace driver {
      */
     //% block="Driver address $addr \\| $pause motor $motor"
     //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
-    //% pause.defl=Pause.Brake
+    //% pause.defl=Pause.Stop
     //% motor.defl=Motor.MotorA
     //% inlineInputMode=inline
     //% weight=4
