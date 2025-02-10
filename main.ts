@@ -131,7 +131,7 @@ namespace driver {
      * @param speed set the rotational speed of the motor
      */
     //% block="Driver address $addr \\| Control motor $motor rotation $rotate with speed $speed in (1\\% - 100\\%)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% motor.defl=Motor.MotorA
     //% rotate.defl=Rotate.Clockwise
     //% speed.defl=50 speed.min=1 speed.max=100
@@ -232,7 +232,7 @@ namespace driver {
      * @param motor choose motor A or motor B
      */
     //% block="Driver address $addr \\| $pause motor $motor"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% pause.defl=Pause.Brake
     //% motor.defl=Motor.MotorA
     //% inlineInputMode=inline
@@ -258,7 +258,7 @@ namespace driver {
      * @param angle set the rotation angle of Servo
      */
     //% block="Driver address $addr \\| Control servo $servo with angle $angle in (0° - 180°)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% servo.defl=Servo.Servo1
     //% angle.shadow="protractorPicker"
     //% inlineInputMode=inline
@@ -334,7 +334,7 @@ namespace driver {
      * @param maxPulse set the PPM pulse to the maximum allowed width
      */
     //% block="Driver address $addr \\| Set range the pulse for servo $servo from $minPulse (Min) to $maxPulse (Max)"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% servo.defl=Servo.Servo1
     //% minPulse.defl=460 minPulse.min=400 minPulse.max=1000
     //% maxPulse.defl=2350 maxPulse.min=2000 maxPulse.max=2600
@@ -361,7 +361,7 @@ namespace driver {
      * @param addr is I2C address for Driver
      */
     //% block="Driver address $addr \\| Release servo $servo"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% servo.defl=Servo.Servo1
     //% inlineInputMode=inline
     //% weight=1
@@ -380,7 +380,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 go forward [🡹] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=10
     //% group="GO"
@@ -397,7 +397,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 go backward [🡻] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=9
     //% group="GO"
@@ -414,7 +414,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 cross 'left' forward [🡼] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=8
     //% group="CROSS"
@@ -431,7 +431,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 cross 'right' forward [🡽] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=7
     //% group="CROSS"
@@ -448,7 +448,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 cross 'left' backward [🡿] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=6
     //% group="CROSS"
@@ -465,7 +465,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 cross 'right' backward [🡾] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=5
     //% group="CROSS"
@@ -482,7 +482,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 turn 'left' [🡸] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=4
     //% group="TURN"
@@ -500,7 +500,7 @@ namespace driver {
     //% advanced=true
     //% block="🚗 turn 'right' [🡺] at speed $speed \\| Driver address $addr"
     //% speed.defl=90 speed.min=1 speed.max=100
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=3
     //% group="TURN"
@@ -516,7 +516,7 @@ namespace driver {
      */
     //% advanced=true
     //% block="🚗 stop now (Brakes) 🛑 \\| Driver address $addr"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=2
     //% group="STOP"
@@ -531,7 +531,7 @@ namespace driver {
      */
     //% advanced=true
     //% block="🚗 release (Slip) ⚠️ \\| Driver address $addr"
-    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% addr.defl=driver.Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
     //% inlineInputMode=inline
     //% weight=1
     //% group="STOP"
