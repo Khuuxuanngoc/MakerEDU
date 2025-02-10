@@ -896,7 +896,7 @@ namespace dht11 {
      */
     //% block="S14 Temp&Humi \\| Read temperature in degree $unit from port $sig"
     //% unit.defl=TemperatureType.Celsius
-    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% sig.defl=dht11.PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     //% weight=2
     export function readTemperature(unit: TemperatureType, sig: PinKit): number {
@@ -912,7 +912,7 @@ namespace dht11 {
      * @param sig signal pin (default P0)
      */
     //% block="S14 Temp&Humi \\| Read air humidity (\\%) from port $sig"
-    //% sig.defl=PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
+    //% sig.defl=dht11.PinKit.P0 sig.fieldEditor="gridpicker" sig.fieldOptions.columns=3
     //% inlineInputMode=inline
     //% weight=1
     export function readHumidity(sig: PinKit): number {
