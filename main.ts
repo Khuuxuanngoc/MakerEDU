@@ -125,7 +125,6 @@ namespace driver {
      * set address
      */
     //% block="set newAddress $newAddress."
-    //% newAddress.defl=Address.add64 newAddress.fieldEditor="gridpicker" newAddress.fieldOptions.columns=2
     export function setAddress(newAddress: number): void {
         let oldAddress = 64;
         let data = 0;
