@@ -121,32 +121,7 @@ namespace driver {
     }
 
     /* --------------------------------------------------------------------- */
-    /**
-     * set newAddress
-     * @param newAddress is I2C address for Driver
-     */
-    //% block="set newAddress $newAddress."
-    //% newAddress.defl=Address.add64 newAddress.fieldEditor="gridpicker" newAddress.fieldOptions.columns=2
-    export function setAddress(newAddress: number): void {
-        let oldAddress = 64;
-        let data = 0;
-        let dataToSend: number[] = [newAddress, 2, 0, 0, 0, (newAddress + 2)];
-        let buffer = pins.createBuffer(6);
-
-        for (let i = 0; i < 6; i++) {
-            buffer.setUint8(i, dataToSend[i]);
-        }
-
-        for (let i = 64; i < 69; i++) {
-            pins.i2cWriteNumber(i, 1, NumberFormat.UInt8LE, false)
-            data = pins.i2cReadNumber(i, NumberFormat.UInt8LE)
-            if (data == 1) {
-                oldAddress = i;
-            }
-        }
-
-        pins.i2cWriteBuffer(oldAddress, buffer);
-    }
+    
 
     /**
      * Control DC motor with parameters: speed & direction of rotation
@@ -220,6 +195,34 @@ namespace driver {
 
         pins.i2cWriteBuffer(addr, buf);
         control.waitMicros(15);
+    }
+
+    /**
+     * set newAddress
+     * @param newAddress is I2C address for Driver
+     */
+    //% block="set newAddress $newAddress."
+    //% addr.defl=Address.add64 addr.fieldEditor="gridpicker" addr.fieldOptions.columns=2
+    //% inlineInputMode=inline
+    export function setAddress(newAddress: number): void {
+        let oldAddress = 64;
+        let data = 0;
+        let dataToSend: number[] = [newAddress, 2, 0, 0, 0, (newAddress + 2)];
+        let buffer = pins.createBuffer(6);
+
+        for (let i = 0; i < 6; i++) {
+            buffer.setUint8(i, dataToSend[i]);
+        }
+
+        for (let i = 64; i < 69; i++) {
+            pins.i2cWriteNumber(i, 1, NumberFormat.UInt8LE, false)
+            data = pins.i2cReadNumber(i, NumberFormat.UInt8LE)
+            if (data == 1) {
+                oldAddress = i;
+            }
+        }
+
+        pins.i2cWriteBuffer(oldAddress, buffer);
     }
 
     /**
