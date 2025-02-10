@@ -721,7 +721,7 @@ namespace ultraSonic {
      */
     //% block="S01 UltraSonic Distance \\| Read distance $unit from port $port"
     //% unit.defl=PingUnit.Centimeters
-    //% port.defl=PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
+    //% port.defl=ultraSonic.PinKit.Port1 port.fieldEditor="gridpicker" port.fieldOptions.columns=2
     //% inlineInputMode=inline
     export function readDistance(unit: PingUnit, port: PinKit): number {
         /* Port? */
